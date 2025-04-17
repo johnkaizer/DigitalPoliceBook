@@ -19,6 +19,8 @@ public class Officer {
     private String idNumber;
     private String officerNumber;
     private String gender;
+    private String specialization;
+    private String role;
     private String email;
     private String username;
     private String password;

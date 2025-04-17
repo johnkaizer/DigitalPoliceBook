@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital OB - Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f8fc;
+        }
+
+        .login-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .login-left {
+            background-color: #000033;
+            color: white;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-left img {
+            max-width: 100px;
+            margin-bottom: 20px;
+        }
+
+        .login-left h1 {
+            font-size: 36px;
+            margin: 0;
+        }
+
+        .login-right {
+            background-color: white;
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px;
+            color: #000033;
+            position: relative;
+        }
+
+        .login-right h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 60%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .forgot-password {
+            margin-bottom: 20px;
+            color: #000033;
+            font-size: 14px;
+        }
+
+        .forgot-password a {
+            text-decoration: none;
+            color: #000033;
+        }
+
+        .btn-login {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-login:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #000033;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Loading text */
+        .loading-text {
+            margin-top: 10px;
+            color: #000033;
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-verify, .btn-reset {
+            background-color: #000033;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-verify:hover, .btn-reset:hover {
+            background-color: #000066;
+        }
+
+        .footer {
+            background-color: #000033;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            flex-shrink: 0; /* Prevent footer from shrinking */
+        }
+
+        .error-message {
+            color: #e53935;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="login-container">
+    <div class="login-left">
+        <img src="/templates/static/badge.png" alt="Digital OB Logo">
+        <h1>Digital OB System</h1>
+    </div>
+    <div class="login-right">
+        <h2>Officer Sign in</h2>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <form id="loginForm" action="/login" method="post">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password">
+            </div>
+            <p class="forgot-password"><a href="#">Forgot your password?</a></p>
+            <button type="submit" class="btn-login">Log In</button>
+        </form>
+        <!-- Loading Overlay -->
+        <div class="loading-overlay">
+            <div>
+                <div class="spinner"></div>
+                <div class="loading-text">Signing in...</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="resetPasswordModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="step1">
+            <h3>Password Reset</h3>
+            <p>Please enter your username and badge number to verify your identity.</p>
+            <div class="input-group">
+                <label for="resetUsername">Username</label>
+                <input type="text" id="resetUsername" placeholder="Enter your username" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="resetBadgeNumber">Badge Number</label>
+                <input type="text" id="resetBadgeNumber" placeholder="Enter your badge number" autocomplete="off">
+            </div>
+            <button type="button" class="btn-verify">Verify</button>
+        </div>
+        <div id="step2" style="display: none;">
+            <h3>Set New Password</h3>
+            <div class="input-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password">
+            </div>
+            <div class="input-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+            </div>
+            <button type="button" class="btn-reset">Reset Password</button>
+        </div>
+    </div>
+</div>
+<div class="footer">
+    Digital OB System | Developed and Maintained by Your Department | Email: support@digitalob.org
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Check if there's an error parameter in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        if (error) {
+            $('#errorMessage').text('Invalid username or password.').show();
+        }
+
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const username = $('#username').val().trim();
+            const password = $('#password').val().trim();
+
+            // Input validation
+            if (!username || !password) {
+                $('#errorMessage').text('Both fields are required.').show();
+                return;
+            }
+
+            // Show loading overlay and disable login button
+            $('.loading-overlay').css('display', 'flex');
+            $('.btn-login').prop('disabled', true);
+
+            // Submit the form
+            this.submit();
+        });
+
+        const modal = $('#resetPasswordModal');
+        const step1 = $('#step1');
+        const step2 = $('#step2');
+
+        // Show modal when clicking "Forgot password?"
+        $('.forgot-password a').click(function(e) {
+            e.preventDefault();
+            modal.show();
+        });
+
+        // Close modal when clicking X
+        $('.close').click(function() {
+            modal.hide();
+            resetForm();
+        });
+
+        // Close modal when clicking outside
+        $(window).click(function(e) {
+            if ($(e.target).is(modal)) {
+                modal.hide();
+                resetForm();
+            }
+        });
+
+        // Handle verification step
+        $('.btn-verify').click(function() {
+            const username = $('#resetUsername').val().trim();
+            const badgeNumber = $('#resetBadgeNumber').val().trim();
+
+            if (!username || !badgeNumber) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            // Simulate verification (replace with actual API call)
+            setTimeout(function() {
+                step1.hide();
+                step2.show();
+            }, 1000);
+        });
+
+        // Handle password reset
+        $('.btn-reset').click(function() {
+            const newPassword = $('#newPassword').val();
+            const confirmPassword = $('#confirmPassword').val();
+
+            if (!newPassword || !confirmPassword) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+
+            // Simulate password reset (replace with actual API call)
+            setTimeout(function() {
+                alert('Password reset successful! Please login with your new password.');
+                modal.hide();
+                resetForm();
+            }, 1000);
+        });
+
+        function resetForm() {
+            $('#resetUsername, #resetBadgeNumber, #newPassword, #confirmPassword').val('');
+            step1.show();
+            step2.hide();
+        }
+    });
+</script>
+</body>
+</html>
