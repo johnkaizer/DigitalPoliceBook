@@ -26,7 +26,7 @@ public class OfficerService {
             admin.setSpecialization("N/A");
             admin.setEmail("admin@policestation.com");
             admin.setUsername("admin");
-            admin.setPassword("admin123"); // In a real app, encrypt this password
+            admin.setPassword("admin123");
             admin.setStatus("ACTIVE");
 
             officerRepository.save(admin);

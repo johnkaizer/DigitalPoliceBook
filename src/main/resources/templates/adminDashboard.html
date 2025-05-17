@@ -272,24 +272,18 @@
             <a href="#"><i class="fas fa-book"></i> OB Records</a>
             <div class="dropdown">
                 <a href="#" onclick="loadFragment('viewAllRecords')">View All Records</a>
-                <a href="#" onclick="loadFragment('searchRecords')">Search Records</a>
-                <a href="#" onclick="loadFragment('importExport')">Import/Export Data</a>
             </div>
         </div>
         <div class="menu-item">
             <a href="#"><i class="fas fa-users"></i> Officers</a>
             <div class="dropdown">
                 <a href="#" onclick="loadFragment('manageOfficers')">Manage Officers</a>
-                <a href="#" onclick="loadFragment('addOfficer')">Add New Officer</a>
-                <a href="#" onclick="loadFragment('officerActivity')">Officer Activity</a>
             </div>
         </div>
         <div class="menu-item">
             <a href="#"><i class="fas fa-folder-open"></i> Cases</a>
             <div class="dropdown">
-                <a href="#" onclick="loadFragment('activeCases')">Active Cases</a>
-                <a href="#" onclick="loadFragment('resolvedCases')">Resolved Cases</a>
-                <a href="#" onclick="loadFragment('caseAssignment')">Case Assignment</a>
+                <a href="#" onclick="loadFragment('manageCases')">Case Management</a>
             </div>
         </div>
         <div class="menu-item">
@@ -298,16 +292,12 @@
                 <a href="#" onclick="loadFragment('dailyReports')">Daily Reports</a>
                 <a href="#" onclick="loadFragment('weeklyReports')">Weekly Reports</a>
                 <a href="#" onclick="loadFragment('monthlyReports')">Monthly Reports</a>
-                <a href="#" onclick="loadFragment('customReports')">Custom Reports</a>
             </div>
         </div>
         <div class="menu-item">
             <a href="#"><i class="fas fa-cog"></i> Settings</a>
             <div class="dropdown">
-                <a href="#" onclick="loadFragment('stationSettings')">Station Settings</a>
-                <a href="#" onclick="loadFragment('systemConfig')">System Configuration</a>
                 <a href="#" onclick="loadFragment('auditLogs')">Audit Logs</a>
-                <a href="#" onclick="loadFragment('backupRestore')">Backup & Restore</a>
             </div>
         </div>
         <div class="menu-item">
@@ -323,136 +313,21 @@
 
 <!-- Content Area -->
 <div id="content" class="content">
-    <!-- Default Dashboard Content -->
-    <h1>Admin Dashboard</h1>
-    <p>Welcome back, <span id="officerName">Admin</span>! Here's an overview of your station.</p>
-
-    <!-- Stats Overview -->
-    <div class="stats-container">
-        <div class="stat-box">
-            <div class="stat-icon"><i class="fas fa-book"></i></div>
-            <div class="stat-number">127</div>
-            <div class="stat-label">New Records Today</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
-            <div class="stat-number">342</div>
-            <div class="stat-label">Active Cases</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-icon"><i class="fas fa-users"></i></div>
-            <div class="stat-number">28</div>
-            <div class="stat-label">Active Officers</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-number">56</div>
-            <div class="stat-label">Cases Resolved (This Week)</div>
-        </div>
-    </div>
-
-    <div class="dashboard-columns">
-        <!-- Recent Activity -->
-        <div class="activity-container">
-            <h2>Recent OB Entries</h2>
-            <ul class="activity-list">
-                <li class="activity-item">
-                    <div class="activity-icon"><i class="fas fa-plus"></i></div>
-                    <div class="activity-details">
-                        <div class="activity-title">Theft Report - Case #12345</div>
-                        <div class="activity-description">Reported by Sgt. Johnson - Theft of mobile phone at Central Market</div>
-                        <div class="activity-time">Today, 10:23 AM</div>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-icon"><i class="fas fa-edit"></i></div>
-                    <div class="activity-details">
-                        <div class="activity-title">Case Update - Case #12300</div>
-                        <div class="activity-description">Suspect identified and brought in for questioning</div>
-                        <div class="activity-time">Today, 9:45 AM</div>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-icon"><i class="fas fa-plus"></i></div>
-                    <div class="activity-details">
-                        <div class="activity-title">Missing Person Report - Case #12344</div>
-                        <div class="activity-description">Filed by Officer Kimani - 16-year-old girl missing since yesterday</div>
-                        <div class="activity-time">Today, 8:32 AM</div>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
-                    <div class="activity-details">
-                        <div class="activity-title">Case Resolved - Case #12290</div>
-                        <div class="activity-description">Stolen vehicle recovered and returned to owner</div>
-                        <div class="activity-time">Yesterday, 7:15 PM</div>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-icon"><i class="fas fa-plus"></i></div>
-                    <div class="activity-details">
-                        <div class="activity-title">Assault Report - Case #12343</div>
-                        <div class="activity-description">Reported by Officer Ouma - Bar fight at Lion's Den Pub</div>
-                        <div class="activity-time">Yesterday, 11:50 AM</div>
-                    </div>
-                </li>
-            </ul>
-        </div>
-
-        <!-- System Notifications -->
-        <div>
-            <div class="activity-container">
-                <h2>System Notifications</h2>
-                <div class="alert alert-success">
-                    <strong>System Update:</strong> Database backup completed successfully.
-                </div>
-                <div class="alert alert-warning">
-                    <strong>Warning:</strong> 5 officers have not completed their daily logs.
-                </div>
-                <div class="alert alert-danger">
-                    <strong>Alert:</strong> Server space is running low (85% used).
-                </div>
-            </div>
-
-            <!-- Officer Activity Summary -->
-            <div class="activity-container">
-                <h2>Officer Activity</h2>
-                <ul class="activity-list">
-                    <li class="activity-item">
-                        <div class="activity-icon"><i class="fas fa-user"></i></div>
-                        <div class="activity-details">
-                            <div class="activity-title">Officer Mutua</div>
-                            <div class="activity-description">Created 8 new records today</div>
-                        </div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon"><i class="fas fa-user"></i></div>
-                        <div class="activity-details">
-                            <div class="activity-title">Officer Wanjiku</div>
-                            <div class="activity-description">Resolved 3 cases today</div>
-                        </div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon"><i class="fas fa-user"></i></div>
-                        <div class="activity-details">
-                            <div class="activity-title">Sgt. Ochieng</div>
-                            <div class="activity-description">Updated 5 case reports</div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <!-- Content will be loaded dynamically -->
+    <div class="alert alert-info">
+        <i class="fas fa-spinner fa-spin"></i> Loading dashboard...
     </div>
 </div>
 
 <!-- Footer -->
 <footer class="footer">
-    Digital OB System | Developed and Maintained by Your Department © <span id="currentYear"></span>
+    Digital OB System | Developed and Maintained by MUSTAFA ABDIRAHMAN © <span id="currentYear"></span>
 </footer>
 
 <!-- jQuery Script for Loading Fragments -->
 <script>
     function loadFragment(fragmentName) {
+        $("#content").html('<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
         $("#content").load(`fragments/${fragmentName}.html`, function (response, status) {
             if (status === "error") {
                 $("#content").html("<div class='alert alert-danger'><strong>Error:</strong> The requested page could not be loaded.</div>");
@@ -480,12 +355,9 @@
 
     // Load default fragment and set current year
     $(document).ready(function() {
-        // Get officer name from session if available
-        const urlParams = new URLSearchParams(window.location.search);
-        const officerName = urlParams.get('name') || 'Admin';
-        $('#officerName').text(officerName);
-
         updateCurrentYear();
+        // Load the dashboard overview by default
+        loadFragment('dashboard_overview');
     });
 </script>
 
