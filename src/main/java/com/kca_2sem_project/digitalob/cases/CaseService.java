@@ -42,7 +42,7 @@ public class CaseService {
 
     public Case createCase(Case policeCase) {
         // Generate a unique case number (OB number)
-        String caseNumber = "OB" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String caseNumber = "OB" + UUID.randomUUID().toString().substring(0, 3).toUpperCase();
         policeCase.setCaseNumber(caseNumber);
 
         // Set the current date if not provided
