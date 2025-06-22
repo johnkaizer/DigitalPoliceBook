@@ -3,97 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital OB - Login</title>
+    <title>Digital OB System - Police Login</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f4f8fc;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
         }
 
         .login-container {
             display: flex;
-            height: 100vh;
+            flex: 1;
+            min-height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        .medical-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.05;
+            background-image: radial-gradient(circle at 25% 25%, #fff 2px, transparent 2px),
+            radial-gradient(circle at 75% 75%, #fff 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: drift 30s linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50px, -50px); }
         }
 
         .login-left {
-            background-color: #000033;
+            background: linear-gradient(135deg, #2c5282 0%, #2d3748 100%);
             color: white;
-            flex: 1;
+            flex: 1.2;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        .login-left img {
-            max-width: 100px;
-            margin-bottom: 20px;
+        .medical-bg {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse-medical 4s ease-in-out infinite;
         }
 
-        .login-left h1 {
-            font-size: 36px;
-            margin: 0;
+        @keyframes pulse-medical {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+            50% { transform: scale(1.1) rotate(180deg); opacity: 0.1; }
         }
 
-        .login-right {
-            background-color: white;
-            flex: 2;
+        .logo-container {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-radius: 20px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            padding: 40px;
-            color: #000033;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            animation: float-medical 3s ease-in-out infinite;
             position: relative;
         }
 
+        @keyframes float-medical {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border-radius: 22px;
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0.7;
+        }
+
+        .logo-icon svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .login-left h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #ffffff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-left .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+            max-width: 350px;
+            line-height: 1.6;
+            color: #cbd5e0;
+        }
+
+        .feature-list {
+            margin-top: 2rem;
+            text-align: left;
+            opacity: 0.8;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .feature-item::before {
+            content: '✓';
+            color: #48bb78;
+            font-weight: bold;
+            margin-right: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .login-right {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem;
+            position: relative;
+            box-shadow: -20px 0 40px rgba(0,0,0,0.1);
+            border-left: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .login-form-container {
+            max-width: 420px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
         .login-right h2 {
-            font-size: 28px;
-            margin-bottom: 20px;
+            font-size: 2.2rem;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .login-subtitle {
+            color: #4a5568;
+            margin-bottom: 0;
+            font-size: 1rem;
+            font-weight: 400;
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.8rem;
+            position: relative;
         }
 
         .input-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 0.6rem;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
         }
 
         .input-group input {
-            width: 60%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
+            width: 100%;
+            padding: 1.1rem 1.2rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #48bb78;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .input-group input::placeholder {
+            color: #a0aec0;
+            font-weight: 400;
         }
 
         .forgot-password {
-            margin-bottom: 20px;
-            color: #000033;
-            font-size: 14px;
+            text-align: right;
+            margin-bottom: 2rem;
         }
 
         .forgot-password a {
+            color: #48bb78;
             text-decoration: none;
-            color: #000033;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #38a169;
+            text-decoration: underline;
         }
 
         .btn-login {
-            background-color: #e53935;
+            width: 100%;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 1.2rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-login:hover::before {
+            left: 100%;
         }
 
         .btn-login:hover {
-            background-color: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* Loading Overlay Styles */
@@ -104,55 +319,61 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #000033;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #48bb78;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        /* Loading text */
         .loading-text {
-            margin-top: 10px;
-            color: #000033;
-            font-size: 14px;
+            margin-top: 1rem;
+            color: #2d3748;
+            font-size: 1rem;
+            font-weight: 500;
         }
 
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 2000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 5px;
-            width: 80%;
+            background: white;
+            margin: 5% auto;
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 90%;
             max-width: 500px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
         }
 
         .close {
@@ -160,96 +381,227 @@
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
+            color: #a0aec0;
+            transition: color 0.3s ease;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #e53e3e;
+        }
+
+        .modal h3 {
+            color: #1a202c;
+            margin-bottom: 1rem;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .modal p {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
         }
 
         .btn-verify, .btn-reset {
-            background-color: #000033;
+            width: 100%;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 1.1rem;
+            border-radius: 12px;
             cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
         }
 
         .btn-verify:hover, .btn-reset:hover {
-            background-color: #000066;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(45, 55, 72, 0.3);
         }
 
         .footer {
-            background-color: #000033;
-            color: white;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #e2e8f0;
             text-align: center;
-            padding: 10px;
-            flex-shrink: 0; /* Prevent footer from shrinking */
+            padding: 1.2rem;
+            font-size: 0.9rem;
         }
 
-        .error-message {
-            color: #e53935;
-            margin-bottom: 15px;
-            font-size: 14px;
+        .footer a {
+            color: #48bb78;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+            color: #68d391;
+        }
+
+        /* Alert Styles */
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1.2rem 1.8rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 3000;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .alert.success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
+        .alert.error {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%) scale(0.95); opacity: 0; }
+            to { transform: translateX(0) scale(1); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left {
+                flex: none;
+                min-height: 250px;
+                padding: 2rem;
+            }
+
+            .login-left h1 {
+                font-size: 2.2rem;
+            }
+
+            .logo-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+            .logo-icon svg {
+                width: 40px;
+                height: 40px;
+            }
+
+            .feature-list {
+                display: none;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .login-right {
+                padding: 2rem 1.5rem;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                padding: 2rem;
+            }
+
+            .login-right h2 {
+                font-size: 1.8rem;
+            }
         }
     </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+<div class="medical-pattern"></div>
 <div class="login-container">
     <div class="login-left">
-        <img src="/static/badge.png" alt="Digital OB Logo">
-        <h1>Digital OB System</h1>
+        <div class="medical-bg"></div>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
+                    <circle cx="12" cy="12" r="2"/>
+                </svg>
+            </div>
+            <h1>Digital OB</h1>
+            <p class="subtitle">Advanced Occurrence Book Management For Kasarani Police Station</p>
+            <div class="feature-list">
+                <div class="feature-item">OB Records Management</div>
+                <div class="feature-item">Officers Management</div>
+                <div class="feature-item">Secure Data Storage</div>
+                <div class="feature-item">Analytics & Reports</div>
+            </div>
+        </div>
     </div>
     <div class="login-right">
-        <h2>Officer Sign in</h2>
-        <div id="errorMessage" class="error-message" style="display: none;"></div>
-        <form id="loginForm" action="/login" method="post">
-            <div class="input-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter your username">
+        <div class="login-form-container">
+            <div class="login-header">
+                <h2>Welcome Back</h2>
+                <p class="login-subtitle">Sign in to access your dashboard</p>
             </div>
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password">
-            </div>
-            <p class="forgot-password"><a href="#">Forgot your password?</a></p>
-            <button type="submit" class="btn-login">Log In</button>
-        </form>
-        <!-- Loading Overlay -->
-        <div class="loading-overlay">
-            <div>
-                <div class="spinner"></div>
-                <div class="loading-text">Signing in...</div>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username"> Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" placeholder="Enter your username" required>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="Enter your secure password" required>
+                    </div>
+                </div>
+                <div class="forgot-password">
+                    <a href="#">Forgot your password?</a>
+                </div>
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+            <!-- Loading Overlay -->
+            <div class="loading-overlay">
+                <div>
+                    <div class="spinner"></div>
+                    <div class="loading-text">Authenticating...</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Password Reset Modal -->
 <div id="resetPasswordModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
         <div id="step1">
-            <h3>Password Reset</h3>
-            <p>Please enter your username and badge number to verify your identity.</p>
+            <h3>Reset Password</h3>
+            <p>Please enter your medical credentials to verify your identity and reset your password.</p>
             <div class="input-group">
-                <label for="resetUsername">Username</label>
-                <input type="text" id="resetUsername" placeholder="Enter your username" autocomplete="off">
+                <label for="resetUsername">Medical ID / Username</label>
+                <input type="text" id="resetUsername" placeholder="Enter your medical ID or username" autocomplete="off">
             </div>
             <div class="input-group">
-                <label for="resetBadgeNumber">Badge Number</label>
-                <input type="text" id="resetBadgeNumber" placeholder="Enter your badge number" autocomplete="off">
+                <label for="resetIdNumber">Staff ID Number</label>
+                <input type="text" id="resetIdNumber" placeholder="Enter your staff ID number" autocomplete="off">
             </div>
-            <button type="button" class="btn-verify">Verify</button>
+            <button type="button" class="btn-verify">Verify Identity</button>
         </div>
         <div id="step2" style="display: none;">
             <h3>Set New Password</h3>
+            <p>Create a strong password for your Digital OB System account.</p>
             <div class="input-group">
                 <label for="newPassword">New Password</label>
-                <input type="password" id="newPassword" placeholder="Enter new password">
+                <input type="password" id="newPassword" placeholder="Enter new password (min. 8 characters)">
             </div>
             <div class="input-group">
                 <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                <input type="password" id="confirmPassword" placeholder="Confirm your new password">
             </div>
-            <button type="button" class="btn-reset">Reset Password</button>
+            <button type="button" class="btn-reset">Update Password</button>
         </div>
     </div>
 </div>
@@ -258,15 +610,22 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        // Check if there's an error parameter in the URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const error = urlParams.get('error');
-        if (error) {
-            $('#errorMessage').text('Invalid username or password.').show();
-        }
+    // Simple alert function
+    function showAlert(message, type) {
+        const alertDiv = $('<div></div>')
+            .addClass(`alert ${type}`)
+            .text(message);
 
-        $('#loginForm').on('submit', function(e) {
+        $('body').append(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    $(document).ready(function () {
+        // Login form submission using AJAX
+        $('#loginForm').on('submit', function (e) {
             e.preventDefault();
 
             const username = $('#username').val().trim();
@@ -274,7 +633,7 @@
 
             // Input validation
             if (!username || !password) {
-                $('#errorMessage').text('Both fields are required.').show();
+                showAlert('Both medical ID and password are required.', 'error');
                 return;
             }
 
@@ -282,8 +641,43 @@
             $('.loading-overlay').css('display', 'flex');
             $('.btn-login').prop('disabled', true);
 
-            // Submit the form
-            this.submit();
+            // AJAX login request sending form data
+            $.ajax({
+                url: '/api/users/login',
+                method: 'POST',
+                data: {
+                    username: username,
+                    password: password
+                },
+                success: function (response) {
+                    if (response.redirectUrl) {
+                        // Successful login
+                        showAlert('Authentication successful! Redirecting to your dashboard...', 'success');
+
+                        // Redirect to appropriate dashboard after a short delay
+                        setTimeout(() => {
+                            window.location.href = response.redirectUrl;
+                        }, 1000);
+                    } else {
+                        // Unexpected response
+                        showAlert('Invalid credentials. Please check your medical ID and password.', 'error');
+                        $('.loading-overlay').hide();
+                        $('.btn-login').prop('disabled', false);
+                    }
+                },
+                error: function (xhr) {
+                    // Handle authentication failure
+                    $('.loading-overlay').hide();
+                    $('.btn-login').prop('disabled', false);
+
+                    if (xhr.status === 401) {
+                        showAlert('Invalid credentials. Please check your medical ID and password.', 'error');
+                    } else {
+                        showAlert('System error. Please contact IT support if the problem persists.', 'error');
+                    }
+                    console.error('Login error:', xhr.responseText);
+                }
+            });
         });
 
         const modal = $('#resetPasswordModal');
@@ -291,19 +685,19 @@
         const step2 = $('#step2');
 
         // Show modal when clicking "Forgot password?"
-        $('.forgot-password a').click(function(e) {
+        $('.forgot-password a').click(function (e) {
             e.preventDefault();
             modal.show();
         });
 
         // Close modal when clicking X
-        $('.close').click(function() {
+        $('.close').click(function () {
             modal.hide();
             resetForm();
         });
 
         // Close modal when clicking outside
-        $(window).click(function(e) {
+        $(window).click(function (e) {
             if ($(e.target).is(modal)) {
                 modal.hide();
                 resetForm();
@@ -311,52 +705,74 @@
         });
 
         // Handle verification step
-        $('.btn-verify').click(function() {
+        $('.btn-verify').click(function () {
             const username = $('#resetUsername').val().trim();
-            const badgeNumber = $('#resetBadgeNumber').val().trim();
+            const idNumber = $('#resetIdNumber').val().trim();
 
-            if (!username || !badgeNumber) {
-                alert('Please fill in all fields');
+            if (!username || !idNumber) {
+                showAlert('Please fill in all verification fields', 'error');
                 return;
             }
 
-            // Simulate verification (replace with actual API call)
-            setTimeout(function() {
-                step1.hide();
-                step2.show();
-            }, 1000);
+            $.ajax({
+                url: '/api/users/verify-reset',
+                method: 'POST',
+                data: {username, idNumber},
+                success: function (response) {
+                    if (response.valid) {
+                        step1.hide();
+                        step2.show();
+                    }
+                },
+                error: function () {
+                    showAlert('Invalid credentials. Please verify your medical ID and staff ID.', 'error');
+                }
+            });
         });
 
         // Handle password reset
-        $('.btn-reset').click(function() {
+        $('.btn-reset').click(function () {
+            const username = $('#resetUsername').val().trim();
+            const idNumber = $('#resetIdNumber').val().trim();
             const newPassword = $('#newPassword').val();
             const confirmPassword = $('#confirmPassword').val();
 
             if (!newPassword || !confirmPassword) {
-                alert('Please fill in all fields');
+                showAlert('Please fill in both password fields', 'error');
                 return;
             }
 
             if (newPassword !== confirmPassword) {
-                alert('Passwords do not match');
+                showAlert('Passwords do not match', 'error');
                 return;
             }
 
-            if (newPassword.length < 6) {
-                alert('Password must be at least 6 characters long');
+            if (newPassword.length < 8) {
+                showAlert('Password must be at least 8 characters long for security', 'error');
                 return;
             }
 
-            // Simulate password reset (replace with actual API call)
-            setTimeout(function() {
-                alert('Password reset successful! Please login with your new password.');
-                modal.hide();
-                resetForm();
-            }, 1000);
+            $.ajax({
+                url: '/api/users/reset-password',
+                method: 'POST',
+                data: {
+                    username,
+                    idNumber,
+                    newPassword
+                },
+                success: function () {
+                    showAlert('Password reset successful! Please sign in with your new password.', 'success');
+                    modal.hide();
+                    resetForm();
+                },
+                error: function () {
+                    showAlert('Password reset failed. Please contact IT support.', 'error');
+                }
+            });
         });
 
         function resetForm() {
-            $('#resetUsername, #resetBadgeNumber, #newPassword, #confirmPassword').val('');
+            $('#resetUsername, #resetIdNumber, #newPassword, #confirmPassword').val('');
             step1.show();
             step2.hide();
         }

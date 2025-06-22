@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Officer Management</title>
+    <!-- Include Fragment Styles -->
+    <link rel="stylesheet" href="/static/css/fragment-styles.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/static/js/alerts.js"></script>
+    <style>
+        /* Additional styles specific to officer management */
+        .officer-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        .image-preview {
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .badge-number {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #1a365d;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(26, 54, 93, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="fragment-container">
+    <!-- Fragment Header -->
+    <div class="fragment-header">
+        <h1 class="fragment-title">
+            <i class="fas fa-shield-alt"></i>
+            Officer Management
+        </h1>
+        <button class="btn btn-primary" id="addOfficerBtn">
+            <i class="fas fa-plus"></i>
+            Add New Officer
+        </button>
+    </div>
+
+    <!-- Search Container -->
+    <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-box" id="searchInput" placeholder="Search officers...">
+    </div>
+
+    <!-- Officers Table Container -->
+    <div class="table-container" id="tableContainer">
+        <table class="data-table" id="officersTable">
+            <thead>
+            <tr>
+                <th>Photo</th>
+                <th>Full Name</th>
+                <th>Badge Number</th>
+                <th>Rank</th>
+                <th>Department</th>
+                <th>Phone Number</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="officersTableBody">
+            <!-- Officers will be loaded here -->
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-shield-alt"></i>
+            <h3>No Officers Found</h3>
+            <p>Start by adding your first officer to manage your team.</p>
+            <button class="btn btn-primary" onclick="$('#addOfficerBtn').click()">
+                <i class="fas fa-plus"></i>
+                Add First Officer
+            </button>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner-sm"></div>
+            <p>Loading officers...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Officer Modal -->
+<div id="officerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Add New Officer</h2>
+            <button class="close" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="officerForm">
+                <input type="hidden" id="officerId" value="">
+
+                <div class="form-group">
+                    <label for="fullName" class="form-label">Full Name *</label>
+                    <input type="text" class="form-control" id="fullName" name="fullName" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="username" class="form-label">Username *</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password *</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                        <small>(Leave blank to keep existing password when editing)</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="idNumber" class="form-label">ID Number *</label>
+                        <input type="text" class="form-control" id="idNumber" name="idNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="badgeNumber" class="form-label">Badge Number *</label>
+                        <input type="text" class="form-control" id="badgeNumber" name="badgeNumber" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="policeRank" class="form-label">Rank *</label>
+                        <select class="form-control" id="policeRank" name="policeRank" required>
+                            <option value="">Select Rank</option>
+                            <option value="Constable">Constable</option>
+                            <option value="Corporal">Corporal</option>
+                            <option value="Sergeant">Sergeant</option>
+                            <option value="Inspector">Inspector</option>
+                            <option value="Chief Inspector">Chief Inspector</option>
+                            <option value="Superintendent">Superintendent</option>
+                            <option value="Deputy Commissioner">Deputy Commissioner</option>
+                            <option value="Commissioner">Commissioner</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="department" class="form-label">Department *</label>
+                        <select class="form-control" id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            <option value="Criminal Investigation">Criminal Investigation</option>
+                            <option value="Traffic">Traffic</option>
+                            <option value="Cyber Crime">Cyber Crime</option>
+                            <option value="Narcotics">Narcotics</option>
+                            <option value="Special Investigations">Special Investigations</option>
+                            <option value="General Duties">General Duties</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phoneNumber" class="form-label">Phone Number *</label>
+                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-control" id="gender" name="gender">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="specialization" class="form-label">Specialization</label>
+                    <input type="text" class="form-control" id="specialization" name="specialization"
+                           placeholder="e.g., Forensics, K9 Unit, SWAT">
+                </div>
+
+                <div class="form-group">
+                    <label for="image" class="form-label">Profile Photo</label>
+                    <input type="file" class="form-control" id="image" name="image" accept="image/*" onchange="previewImage(event)">
+                    <div class="image-preview" id="imagePreview">
+                        <img id="profileImage" src="/static/image.png" alt="Profile preview">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveBtn" form="officerForm">
+                <i class="fas fa-save"></i>
+                Save Officer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Confirm Delete</h2>
+            <button class="close" id="closeDeleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete this officer? This action cannot be undone.</p>
+            <p><strong id="deleteOfficerName"></strong></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                <i class="fas fa-trash"></i>
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Global variables
+        let currentOfficerId = null;
+        let isEditing = false;
+
+        // Initialize the page
+        init();
+
+        function init() {
+            loadOfficers();
+            bindEvents();
+        }
+
+        function bindEvents() {
+            // Add officer button
+            $('#addOfficerBtn').click(function() {
+                openModal('add');
+            });
+
+            // Modal close events
+            $('#closeModal, #cancelBtn').click(function() {
+                closeModal();
+            });
+
+            $('#closeDeleteModal, #cancelDeleteBtn').click(function() {
+                closeDeleteModal();
+            });
+
+            // Form submission
+            $('#officerForm').submit(function(e) {
+                e.preventDefault();
+                saveOfficer();
+            });
+
+            // Search functionality
+            $('#searchInput').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                filterOfficers(searchTerm);
+            });
+
+            // Delete confirmation
+            $('#confirmDeleteBtn').click(function() {
+                deleteOfficerConfirmed(currentOfficerId);
+            });
+
+            // Close modal when clicking outside
+            $('.modal').click(function(e) {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function loadOfficers() {
+            showLoading(true);
+
+            $.ajax({
+                url: '/api/users',
+                method: 'GET',
+                success: function(officers) {
+                    renderOfficers(officers);
+                    showLoading(false);
+                },
+                error: function(xhr) {
+                    showAlert('Error loading officers: ' + xhr.responseText, 'error');
+                    showLoading(false);
+                }
+            });
+        }
+
+        function renderOfficers(officers) {
+            const tbody = $('#officersTableBody');
+            tbody.empty();
+
+            if (officers.length === 0) {
+                $('#emptyState').show();
+                $('#officersTable').hide();
+                return;
+            }
+
+            $('#emptyState').hide();
+            $('#officersTable').show();
+
+            officers.forEach(officer => {
+                const row = createOfficerRow(officer);
+                tbody.append(row);
+            });
+        }
+
+        function createOfficerRow(officer) {
+            const imageUrl = officer.image ?
+                `/api/users/officer-image/${officer.image}` :
+                '/static/image.png';
+
+            const departmentClass = getDepartmentClass(officer.department);
+
+            return `
+                <tr data-officer-id="${officer.id}">
+                    <td>
+                        <img src="${imageUrl}"
+                             alt="${officer.fullName}"
+                             class="officer-image"
+                             onerror="this.src='/static/image.png'">
+                    </td>
+                    <td>
+                        <strong>${officer.fullName || ''}</strong>
+                        ${officer.specialization ? `<br><small style="color: #6c757d;">${officer.specialization}</small>` : ''}
+                    </td>
+                    <td>
+                        <span class="badge-number">${officer.badgeNumber || 'N/A'}</span>
+                    </td>
+                    <td>
+                        <span class="rank-badge">${officer.policeRank || 'Not Set'}</span>
+                    </td>
+                    <td>
+                        <span class="department-badge ${departmentClass}">${officer.department || 'Not Set'}</span>
+                    </td>
+                    <td>${officer.phoneNumber || 'N/A'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn action-btn-edit" onclick="editOfficer(${officer.id})">
+                                <i class="fas fa-edit"></i>
+                                Edit
+                            </button>
+                            <button class="action-btn action-btn-delete" onclick="deleteOfficer(${officer.id}, '${officer.fullName}')">
+                                <i class="fas fa-trash"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function getDepartmentClass(department) {
+            const deptMap = {
+                'Criminal Investigation': 'dept-criminal',
+                'Traffic': 'dept-traffic',
+                'Cyber Crime': 'dept-cyber',
+                'Narcotics': 'dept-narcotics',
+                'Special Investigations': 'dept-special'
+            };
+            return deptMap[department] || 'dept-general';
+        }
+
+        function openModal(mode, officerId = null) {
+            isEditing = mode === 'edit';
+
+            if (isEditing) {
+                $('#modalTitle').text('Edit Officer');
+                $('#saveBtn').html('<i class="fas fa-save"></i> Update Officer');
+            } else {
+                $('#modalTitle').text('Add New Officer');
+                $('#officerForm')[0].reset();
+                $('#officerId').val('');
+                $('#profileImage').attr('src', '/static/image.png');
+                $('#password').attr('required', true);
+                $('#saveBtn').html('<i class="fas fa-save"></i> Save Officer');
+            }
+
+            $('#officerModal').show();
+            $('#fullName').focus();
+        }
+
+        function closeModal() {
+            $('#officerModal').hide();
+            $('#officerForm')[0].reset();
+            $('#profileImage').attr('src', '/static/image.png');
+        }
+
+        function saveOfficer() {
+            const officerId = $('#officerId').val();
+
+            // Validate required fields
+            const fullName = $('#fullName').val().trim();
+            const username = $('#username').val().trim();
+            const idNumber = $('#idNumber').val().trim();
+            const badgeNumber = $('#badgeNumber').val().trim();
+            const policeRank = $('#policeRank').val();
+            const department = $('#department').val();
+            const phoneNumber = $('#phoneNumber').val().trim();
+            const password = $('#password').val();
+
+            if (!fullName || !username || !idNumber || !badgeNumber || !policeRank || !department || !phoneNumber || (!officerId && !password)) {
+                showAlert('Please fill all required fields!', 'error');
+                return;
+            }
+
+            // Create user object
+            const userData = {
+                fullName: fullName,
+                username: username,
+                idNumber: idNumber,
+                badgeNumber: badgeNumber,
+                policeRank: policeRank,
+                department: department,
+                phoneNumber: phoneNumber,
+                gender: $('#gender').val(),
+                specialization: $('#specialization').val(),
+                role: 'Officer' // Set default role
+            };
+
+            if (password) {
+                userData.password = password;
+            }
+
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('user', new Blob([JSON.stringify(userData)], {
+                type: 'application/json'
+            }));
+
+            // Add profile image if selected
+            const imageFile = $('#image')[0].files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            const url = officerId ? `/api/users/${officerId}` : '/api/users';
+            const method = officerId ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                method: method,
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    loadOfficers();
+                    closeModal();
+                    const message = officerId ? 'Officer updated successfully!' : 'Officer added successfully!';
+                    showAlert(message, 'success');
+                },
+                error: function(xhr) {
+                    showAlert('Error saving officer: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+
+        function editOfficer(id) {
+            $.ajax({
+                url: `/api/users/${id}`,
+                method: 'GET',
+                success: function(officer) {
+                    $('#officerId').val(officer.id);
+                    $('#fullName').val(officer.fullName || '');
+                    $('#username').val(officer.username || '');
+                    $('#idNumber').val(officer.idNumber || '');
+                    $('#badgeNumber').val(officer.badgeNumber || '');
+                    $('#policeRank').val(officer.policeRank || '');
+                    $('#department').val(officer.department || '');
+                    $('#phoneNumber').val(officer.phoneNumber || '');
+                    $('#gender').val(officer.gender || '');
+                    $('#specialization').val(officer.specialization || '');
+
+                    const imageUrl = officer.image ?
+                        `/api/users/officer-image/${officer.image}` :
+                        '/static/image.png';
+                    $('#profileImage').attr('src', imageUrl);
+                    $('#password').attr('required', false);
+
+                    openModal('edit', officer.id);
+                },
+                error: function(xhr) {
+                    showAlert('Error fetching officer details: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+
+        function deleteOfficer(id, name) {
+            currentOfficerId = id;
+            $('#deleteOfficerName').text(name);
+            $('#deleteModal').show();
+        }
+
+        function closeDeleteModal() {
+            $('#deleteModal').hide();
+            currentOfficerId = null;
+        }
+
+        function deleteOfficerConfirmed(id) {
+            $.ajax({
+                url: `/api/users/${id}`,
+                method: 'DELETE',
+                success: function() {
+                    loadOfficers();
+                    closeDeleteModal();
+                    showAlert('Officer deleted successfully!', 'success');
+                },
+                error: function(xhr) {
+                    showAlert('Error deleting officer: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+
+        function filterOfficers(searchTerm) {
+            const rows = $('#officersTableBody tr');
+
+            if (!searchTerm) {
+                rows.show();
+                return;
+            }
+
+            rows.each(function() {
+                const row = $(this);
+                const text = row.text().toLowerCase();
+
+                if (text.includes(searchTerm)) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+
+            // Check if any rows are visible
+            const visibleRows = $('#officersTableBody tr:visible');
+            if (visibleRows.length === 0) {
+                $('#officersTableBody').html(`
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                            <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                            No officers found matching "${searchTerm}"
+                        </td>
+                    </tr>
+                `);
+            }
+        }
+
+        function showLoading(show) {
+            if (show) {
+                $('#loadingOverlay').show();
+            } else {
+                $('#loadingOverlay').hide();
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = $(`
+                <div class="alert ${type}" style="position: fixed; top: 20px; right: 20px; z-index: 3000;
+                     padding: 1rem 1.5rem; border-radius: 12px; color: white; font-weight: 500;
+                     max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                     background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' : 'linear-gradient(135deg, #e74c3c, #c0392b)'};
+                     animation: slideInRight 0.3s ease;">
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profileImage').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Global functions for button onclick events
+        window.editOfficer = editOfficer;
+        window.deleteOfficer = deleteOfficer;
+        window.previewImage = previewImage;
+    });
+</script>
+</body>
+</html>

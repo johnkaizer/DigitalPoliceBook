@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Management</title>
+    <!-- Include Fragment Styles -->
+    <link rel="stylesheet" href="/static/css/fragment-styles.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/static/js/alerts.js"></script>
+    <style>
+        /* Additional styles specific to audit logs */
+        .filters-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .filter-group input {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .logs-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .action-create {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .action-update {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .action-delete {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .action-login {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .action-default {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .top-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="fragment-container">
+    <!-- Fragment Header -->
+    <div class="fragment-header">
+        <h1 class="fragment-title">
+            <i class="fas fa-history"></i>
+            Audit Logs Management
+        </h1>
+    </div>
+
+    <!-- Filters Container -->
+    <div class="filters-container">
+        <div class="filters">
+            <div class="filter-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Filter by username">
+            </div>
+            <div class="filter-group">
+                <label for="action">Action</label>
+                <input type="text" id="action" placeholder="Filter by action">
+            </div>
+            <div class="filter-group">
+                <label for="date">Date</label>
+                <input type="date" id="date">
+            </div>
+        </div>
+
+        <div class="top-actions">
+            <button class="btn btn-primary" id="filterBtn">
+                <i class="fas fa-filter"></i>
+                Apply Filters
+            </button>
+            <!--            <button class="btn btn-danger" id="exportPdfBtn">-->
+            <!--                <i class="fas fa-file-pdf"></i>-->
+            <!--                Export PDF-->
+            <!--            </button>-->
+            <button class="btn btn-success" id="exportExcelBtn">
+                <i class="fas fa-file-excel"></i>
+                Export Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Logs Table Container -->
+    <div class="table-container" id="tableContainer">
+        <table class="data-table" id="logsTable">
+            <thead>
+            <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Timestamp</th>
+            </tr>
+            </thead>
+            <tbody id="logsTableBody">
+            <!-- Logs will be loaded here dynamically -->
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-history"></i>
+            <h3>No Logs Found</h3>
+            <p>No audit logs match your current filters or no logs are available.</p>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner-sm"></div>
+            <p>Loading logs...</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const API_BASE_URL = '/api/logs';
+        const tableBody = $('#logsTableBody');
+
+        // Function to show loading state
+        function showLoading(show) {
+            if (show) {
+                $('#loadingOverlay').show();
+                $('#emptyState').hide();
+            } else {
+                $('#loadingOverlay').hide();
+            }
+        }
+
+        // Function to show empty state
+        function showEmptyState(show) {
+            if (show) {
+                $('#emptyState').show();
+                $('#logsTable').hide();
+            } else {
+                $('#emptyState').hide();
+                $('#logsTable').show();
+            }
+        }
+
+        // Function to get action badge class
+        function getActionBadgeClass(action) {
+            const actionLower = action.toLowerCase();
+            if (actionLower.includes('create') || actionLower.includes('add')) {
+                return 'action-create';
+            } else if (actionLower.includes('update') || actionLower.includes('edit')) {
+                return 'action-update';
+            } else if (actionLower.includes('delete') || actionLower.includes('remove')) {
+                return 'action-delete';
+            } else if (actionLower.includes('login') || actionLower.includes('signin')) {
+                return 'action-login';
+            } else {
+                return 'action-default';
+            }
+        }
+
+        // Function to fetch all logs (initial load)
+        function fetchAllLogs() {
+            showLoading(true);
+
+            $.ajax({
+                url: `${API_BASE_URL}/all`,
+                method: 'GET',
+                success: function (data) {
+                    renderTable(data);
+                    showLoading(false);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching logs:', error);
+                    showAlert('Error fetching logs: ' + error, 'error');
+                    showLoading(false);
+                    showEmptyState(true);
+                }
+            });
+        }
+
+        // Function to fetch logs with filters
+        function fetchFilteredLogs() {
+            showLoading(true);
+
+            const username = $('#username').val();
+            const action = $('#action').val();
+            const date = $('#date').val();
+
+            let url = API_BASE_URL;
+            let params = new URLSearchParams();
+
+            if (username) params.append('username', username);
+            if (action) params.append('action', action);
+            if (date) params.append('date', date);
+
+            const queryString = params.toString();
+            if (queryString) {
+                url += '?' + queryString;
+            }
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function (data) {
+                    renderTable(data);
+                    showLoading(false);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching filtered logs:', error);
+                    showAlert('Error fetching logs: ' + error, 'error');
+                    showLoading(false);
+                    showEmptyState(true);
+                }
+            });
+        }
+
+        // Function to render table
+        function renderTable(data) {
+            tableBody.empty();
+
+            if (!data || data.length === 0) {
+                showEmptyState(true);
+                return;
+            }
+
+            showEmptyState(false);
+
+            data.forEach(log => {
+                const timestamp = new Date(log.timestamp).toLocaleString();
+                const actionBadgeClass = getActionBadgeClass(log.action);
+
+                tableBody.append(`
+                    <tr>
+                        <td><strong>${log.user}</strong></td>
+                        <td><span class="logs-badge ${actionBadgeClass}">${log.action}</span></td>
+                        <td>${log.details || '-'}</td>
+                        <td>${timestamp}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        // Function to show alert messages
+        function showAlert(message, type) {
+            // Create alert element
+            const alertDiv = $(`
+                <div class="alert ${type}" style="position: fixed; top: 20px; right: 20px; z-index: 3000;
+                     padding: 1rem 1.5rem; border-radius: 12px; color: white; font-weight: 500;
+                     max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                     background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' : 'linear-gradient(135deg, #e74c3c, #c0392b)'};
+                     animation: slideInRight 0.3s ease;">
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Filter button click handler
+        $('#filterBtn').on('click', function () {
+            fetchFilteredLogs();
+        });
+
+        // Export to PDF
+        $('#exportPdfBtn').on('click', function () {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.autoTable({
+                    html: '#logsTable',
+                    theme: 'grid',
+                    headStyles: { fillColor: [30, 60, 114] }, // Match the header color
+                    margin: { top: 10 }
+                });
+
+                doc.save('audit_logs.pdf');
+                showAlert('PDF exported successfully!', 'success');
+            } catch (error) {
+                console.error('Error exporting PDF:', error);
+                showAlert('Error exporting PDF', 'error');
+            }
+        });
+
+        // Export to Excel
+        $('#exportExcelBtn').on('click', function () {
+            try {
+                const ws = XLSX.utils.table_to_sheet(document.getElementById('logsTable'));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Audit Logs');
+                XLSX.writeFile(wb, 'audit_logs.xlsx');
+                showAlert('Excel file exported successfully!', 'success');
+            } catch (error) {
+                console.error('Error exporting Excel:', error);
+                showAlert('Error exporting Excel file', 'error');
+            }
+        });
+
+        // Clear filters functionality
+        function clearFilters() {
+            $('#username').val('');
+            $('#action').val('');
+            $('#date').val('');
+            fetchAllLogs();
+        }
+
+        // Add clear filters button functionality (optional - you can add this button if needed)
+        $(document).on('keyup', '#username, #action', function(e) {
+            if (e.key === 'Enter') {
+                fetchFilteredLogs();
+            }
+        });
+
+        // Initialize: fetch all logs when page loads
+        fetchAllLogs();
+    });
+</script>
+</body>
+</html>

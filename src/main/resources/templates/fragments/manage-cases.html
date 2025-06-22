@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Management</title>
+    <!-- Include Fragment Styles -->
+    <link rel="stylesheet" href="/static/css/fragment-styles.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/static/js/alerts.js"></script>
+    <style>
+        /* Additional styles specific to case management */
+        .case-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-open {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .status-under-investigation {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .status-closed {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .status-suspended {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .case-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .case-id {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #1a365d;
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(26, 54, 93, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .case-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .case-details h4 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-row, .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .priority-high {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .priority-medium {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .priority-low {
+            color: #27ae60;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="fragment-container">
+    <!-- Fragment Header -->
+    <div class="fragment-header">
+        <h1 class="fragment-title">
+            <i class="fas fa-folder-open"></i>
+            Case Management
+        </h1>
+        <button class="btn btn-primary" id="addCaseBtn">
+            <i class="fas fa-plus"></i>
+            Add New Case
+        </button>
+    </div>
+
+    <!-- Search and Filter Container -->
+    <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-box" id="searchInput" placeholder="Search cases...">
+        <select class="form-control" id="statusFilter" style="margin-left: 1rem; width: 200px;">
+            <option value="">All Status</option>
+            <option value="OPEN">Open</option>
+            <option value="UNDER_INVESTIGATION">Under Investigation</option>
+            <option value="CLOSED">Closed</option>
+            <option value="SUSPENDED">Suspended</option>
+        </select>
+    </div>
+
+    <!-- Cases Table Container -->
+    <div class="table-container" id="tableContainer">
+        <table class="data-table" id="casesTable">
+            <thead>
+            <tr>
+                <th>Case ID</th>
+                <th>Reporter</th>
+                <th>Case Type</th>
+                <th>Location</th>
+                <th>Officer</th>
+                <th>Status</th>
+                <th>Date Created</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="casesTableBody">
+            <!-- Cases will be loaded here -->
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-folder-open"></i>
+            <h3>No Cases Found</h3>
+            <p>Start by adding your first case to track incidents.</p>
+            <button class="btn btn-primary" onclick="$('#addCaseBtn').click()">
+                <i class="fas fa-plus"></i>
+                Add First Case
+            </button>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner-sm"></div>
+            <p>Loading cases...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Case Modal -->
+<div id="caseModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Add New Case</h2>
+            <button class="close" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="caseForm">
+                <input type="hidden" id="caseId" value="">
+
+                <!-- Reporter Information Section -->
+                <div class="case-details">
+                    <h4><i class="fas fa-user"></i> Reporter Information</h4>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label for="reporterName" class="form-label">Reporter Name *</label>
+                            <input type="text" class="form-control" id="reporterName" name="reporterName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reporterPhone" class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" id="reporterPhone" name="reporterPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reporterIdNumber" class="form-label">ID Number *</label>
+                            <input type="text" class="form-control" id="reporterIdNumber" name="reporterIdNumber" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Officer Information Section -->
+                <div class="case-details">
+                    <h4><i class="fas fa-shield-alt"></i> Recording Officer</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="officerName" class="form-label">Officer Name *</label>
+                            <input type="text" class="form-control" id="officerName" name="officerName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="officerBadgeNumber" class="form-label">Badge Number *</label>
+                            <input type="text" class="form-control" id="officerBadgeNumber" name="officerBadgeNumber" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case Information Section -->
+                <div class="case-details">
+                    <h4><i class="fas fa-clipboard-list"></i> Case Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="caseType" class="form-label">Case Type *</label>
+                            <select class="form-control" id="caseType" name="caseType" required>
+                                <option value="">Select Case Type</option>
+                                <option value="THEFT">Theft</option>
+                                <option value="ASSAULT">Assault</option>
+                                <option value="BURGLARY">Burglary</option>
+                                <option value="FRAUD">Fraud</option>
+                                <option value="VANDALISM">Vandalism</option>
+                                <option value="DOMESTIC_VIOLENCE">Domestic Violence</option>
+                                <option value="DRUG_RELATED">Drug Related</option>
+                                <option value="TRAFFIC_VIOLATION">Traffic Violation</option>
+                                <option value="CYBER_CRIME">Cyber Crime</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="caseStatus" class="form-label">Status</label>
+                            <select class="form-control" id="caseStatus" name="caseStatus">
+                                <option value="OPEN">Open</option>
+                                <option value="UNDER_INVESTIGATION">Under Investigation</option>
+                                <option value="CLOSED">Closed</option>
+                                <option value="SUSPENDED">Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="crimeLocation" class="form-label">Crime Location *</label>
+                            <input type="text" class="form-control" id="crimeLocation" name="crimeLocation" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="crimeDateTime" class="form-label">Crime Date & Time *</label>
+                            <input type="datetime-local" class="form-control" id="crimeDateTime" name="crimeDateTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="caseDescription" class="form-label">Case Description *</label>
+                        <textarea class="form-control" id="caseDescription" name="caseDescription" rows="4" required
+                                  placeholder="Provide detailed description of the incident..."></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveBtn" form="caseForm">
+                <i class="fas fa-save"></i>
+                Save Case
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Confirm Delete</h2>
+            <button class="close" id="closeDeleteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete this case? This action cannot be undone.</p>
+            <p><strong>Case ID: <span id="deleteCaseId"></span></strong></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                <i class="fas fa-trash"></i>
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Global variables
+        let currentCaseId = null;
+        let isEditing = false;
+
+        // Initialize the page
+        init();
+
+        function init() {
+            loadCases();
+            bindEvents();
+        }
+
+        function bindEvents() {
+            // Add case button
+            $('#addCaseBtn').click(function() {
+                openModal('add');
+            });
+
+            // Modal close events
+            $('#closeModal, #cancelBtn').click(function() {
+                closeModal();
+            });
+
+            $('#closeDeleteModal, #cancelDeleteBtn').click(function() {
+                closeDeleteModal();
+            });
+
+            // Form submission
+            $('#caseForm').submit(function(e) {
+                e.preventDefault();
+                saveCase();
+            });
+
+            // Search functionality
+            $('#searchInput').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                filterCases(searchTerm);
+            });
+
+            // Status filter
+            $('#statusFilter').on('change', function() {
+                const status = $(this).val();
+                filterByStatus(status);
+            });
+
+            // Delete confirmation
+            $('#confirmDeleteBtn').click(function() {
+                deleteCaseConfirmed(currentCaseId);
+            });
+
+            // Close modal when clicking outside
+            $('.modal').click(function(e) {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function loadCases() {
+            showLoading(true);
+
+            $.ajax({
+                url: '/api/cases',
+                method: 'GET',
+                success: function(cases) {
+                    renderCases(cases);
+                    showLoading(false);
+                },
+                error: function(xhr) {
+                    showAlert('Error loading cases: ' + xhr.responseText, 'error');
+                    showLoading(false);
+                }
+            });
+        }
+
+        function renderCases(cases) {
+            const tbody = $('#casesTableBody');
+            tbody.empty();
+
+            if (cases.length === 0) {
+                $('#emptyState').show();
+                $('#casesTable').hide();
+                return;
+            }
+
+            $('#emptyState').hide();
+            $('#casesTable').show();
+
+            cases.forEach(caseItem => {
+                const row = createCaseRow(caseItem);
+                tbody.append(row);
+            });
+        }
+
+        function createCaseRow(caseItem) {
+            const statusClass = getStatusClass(caseItem.caseStatus);
+            const formattedDate = formatDate(caseItem.created);
+            const crimeDate = formatDate(caseItem.crimeDateTime);
+
+            return `
+                <tr data-case-id="${caseItem.id}">
+                    <td>
+                        <span class="case-id">#${caseItem.id}</span>
+                    </td>
+                    <td>
+                        <strong>${caseItem.reporterName || 'N/A'}</strong>
+                        <br><small style="color: #6c757d;">${caseItem.reporterPhone || ''}</small>
+                    </td>
+                    <td>
+                        <span class="case-type-badge">${caseItem.caseType || 'N/A'}</span>
+                    </td>
+                    <td>
+                        <small>${caseItem.crimeLocation || 'N/A'}</small>
+                        <br><small style="color: #6c757d;">${crimeDate}</small>
+                    </td>
+                    <td>
+                        <strong>${caseItem.officerName || 'N/A'}</strong>
+                        <br><small style="color: #6c757d;">Badge: ${caseItem.officerBadgeNumber || 'N/A'}</small>
+                    </td>
+                    <td>
+                        <span class="case-status ${statusClass}">${caseItem.caseStatus || 'OPEN'}</span>
+                    </td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn action-btn-edit" onclick="editCase(${caseItem.id})">
+                                <i class="fas fa-edit"></i>
+                                Edit
+                            </button>
+                            <button class="action-btn action-btn-delete" onclick="deleteCase(${caseItem.id})">
+                                <i class="fas fa-trash"></i>
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function getStatusClass(status) {
+            const statusMap = {
+                'OPEN': 'status-open',
+                'UNDER_INVESTIGATION': 'status-under-investigation',
+                'CLOSED': 'status-closed',
+                'SUSPENDED': 'status-suspended'
+            };
+            return statusMap[status] || 'status-open';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function openModal(mode, caseId = null) {
+            isEditing = mode === 'edit';
+
+            if (isEditing) {
+                $('#modalTitle').text('Edit Case');
+                $('#saveBtn').html('<i class="fas fa-save"></i> Update Case');
+            } else {
+                $('#modalTitle').text('Add New Case');
+                $('#caseForm')[0].reset();
+                $('#caseId').val('');
+                $('#caseStatus').val('OPEN'); // Default status
+                $('#saveBtn').html('<i class="fas fa-save"></i> Save Case');
+            }
+
+            $('#caseModal').show();
+            $('#reporterName').focus();
+        }
+
+        function closeModal() {
+            $('#caseModal').hide();
+            $('#caseForm')[0].reset();
+        }
+
+        function saveCase() {
+            const caseId = $('#caseId').val();
+
+            // Validate required fields
+            const reporterName = $('#reporterName').val().trim();
+            const reporterPhone = $('#reporterPhone').val().trim();
+            const reporterIdNumber = $('#reporterIdNumber').val().trim();
+            const officerName = $('#officerName').val().trim();
+            const officerBadgeNumber = $('#officerBadgeNumber').val().trim();
+            const caseType = $('#caseType').val();
+            const crimeLocation = $('#crimeLocation').val().trim();
+            const crimeDateTime = $('#crimeDateTime').val();
+            const caseDescription = $('#caseDescription').val().trim();
+
+            if (!reporterName || !reporterPhone || !reporterIdNumber || !officerName ||
+                !officerBadgeNumber || !caseType || !crimeLocation || !crimeDateTime || !caseDescription) {
+                showAlert('Please fill all required fields!', 'error');
+                return;
+            }
+
+            // Create case object
+            const caseData = {
+                reporterName: reporterName,
+                reporterPhone: reporterPhone,
+                reporterIdNumber: reporterIdNumber,
+                officerName: officerName,
+                officerBadgeNumber: officerBadgeNumber,
+                caseType: caseType,
+                crimeLocation: crimeLocation,
+                crimeDateTime: crimeDateTime,
+                caseDescription: caseDescription,
+                caseStatus: $('#caseStatus').val() || 'OPEN'
+            };
+
+            const url = caseId ? `/api/cases/${caseId}` : '/api/cases';
+            const method = caseId ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(caseData),
+                success: function(response) {
+                    loadCases();
+                    closeModal();
+                    const message = caseId ? 'Case updated successfully!' : 'Case added successfully!';
+                    showAlert(message, 'success');
+                },
+                error: function(xhr) {
+                    showAlert('Error saving case: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+
+        function editCase(id) {
+            $.ajax({
+                url: `/api/cases/${id}`,
+                method: 'GET',
+                success: function(caseItem) {
+                    $('#caseId').val(caseItem.id);
+                    $('#reporterName').val(caseItem.reporterName || '');
+                    $('#reporterPhone').val(caseItem.reporterPhone || '');
+                    $('#reporterIdNumber').val(caseItem.reporterIdNumber || '');
+                    $('#officerName').val(caseItem.officerName || '');
+                    $('#officerBadgeNumber').val(caseItem.officerBadgeNumber || '');
+                    $('#caseType').val(caseItem.caseType || '');
+                    $('#crimeLocation').val(caseItem.crimeLocation || '');
+                    $('#caseDescription').val(caseItem.caseDescription || '');
+                    $('#caseStatus').val(caseItem.caseStatus || 'OPEN');
+
+                    // Format datetime for input
+                    if (caseItem.crimeDateTime) {
+                        const date = new Date(caseItem.crimeDateTime);
+                        const formattedDate = date.toISOString().slice(0, 16);
+                        $('#crimeDateTime').val(formattedDate);
+                    }
+
+                    openModal('edit', caseItem.id);
+                },
+                error: function(xhr) {
+                    showAlert('Error fetching case details: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+
+        function deleteCase(id) {
+            currentCaseId = id;
+            $('#deleteCaseId').text('#' + id);
+            $('#deleteModal').show();
+        }
+
+        function closeDeleteModal() {
+            $('#deleteModal').hide();
+            currentCaseId = null;
+        }
+
+        function deleteCaseConfirmed(id) {
+            $.ajax({
+                url: `/api/cases/${id}`,
+                method: 'DELETE',
+                success: function() {
+                    loadCases();
+                    closeDeleteModal();
+                    showAlert('Case deleted successfully!', 'success');
+                },
+                error: function(xhr) {
+                    showAlert('Error deleting case: ' + xhr.responseText, 'error');
+                }
+            });
+        }
+
+        function filterCases(searchTerm) {
+            const rows = $('#casesTableBody tr');
+
+            if (!searchTerm) {
+                rows.show();
+                return;
+            }
+
+            rows.each(function() {
+                const row = $(this);
+                const text = row.text().toLowerCase();
+
+                if (text.includes(searchTerm)) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+
+            checkVisibleRows(searchTerm);
+        }
+
+        function filterByStatus(status) {
+            const rows = $('#casesTableBody tr');
+
+            if (!status) {
+                rows.show();
+                return;
+            }
+
+            rows.each(function() {
+                const row = $(this);
+                const rowStatus = row.find('.case-status').text().trim();
+
+                if (rowStatus === status) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+
+            checkVisibleRows(`status: ${status}`);
+        }
+
+        function checkVisibleRows(searchTerm) {
+            const visibleRows = $('#casesTableBody tr:visible');
+            if (visibleRows.length === 0) {
+                $('#casesTableBody').html(`
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                            <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                            No cases found matching "${searchTerm}"
+                        </td>
+                    </tr>
+                `);
+            }
+        }
+
+        function showLoading(show) {
+            if (show) {
+                $('#loadingOverlay').show();
+            } else {
+                $('#loadingOverlay').hide();
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = $(`
+                <div class="alert ${type}" style="position: fixed; top: 20px; right: 20px; z-index: 3000;
+                     padding: 1rem 1.5rem; border-radius: 12px; color: white; font-weight: 500;
+                     max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                     background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' : 'linear-gradient(135deg, #e74c3c, #c0392b)'};
+                     animation: slideInRight 0.3s ease;">
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Global functions for button onclick events
+        window.editCase = editCase;
+        window.deleteCase = deleteCase;
+    });
+</script>
+</body>
+</html>

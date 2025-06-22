@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <!-- Include Fragment Styles -->
+    <link rel="stylesheet" href="/static/css/fragment-styles.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/static/js/alerts.js"></script>
+    <style>
+        /* Additional styles specific to user profile */
+        .profile-info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 2rem;
+        }
+
+        .profile-image-container {
+            position: relative;
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .profile-info h2 {
+            color: #2c3e50;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .profile-role {
+            color: #7f8c8d;
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 20px;
+        }
+
+        .profile-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .detail-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .detail-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .detail-header {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .detail-header i {
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* File input wrapper styles */
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .file-display {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #667eea;
+        }
+
+        /* Password section styling */
+        .password-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .password-section h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .password-section h3 i {
+            color: #e74c3c;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .profile-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="fragment-container">
+    <!-- Fragment Header -->
+    <div class="fragment-header">
+        <h1 class="fragment-title">
+            <i class="fas fa-user-circle"></i>
+            User Profile
+        </h1>
+        <button class="btn btn-primary" id="editProfileBtn">
+            <i class="fas fa-edit"></i>
+            Edit Profile
+        </button>
+    </div>
+
+    <!-- Profile Info Card -->
+    <div class="profile-info-card">
+        <div class="profile-header">
+            <div class="profile-image-container">
+                <img id="userImage" src="/api/placeholder/150/150" alt="Profile" class="profile-image" />
+            </div>
+            <div class="profile-info">
+                <h2 id="userName">Loading...</h2>
+                <p class="profile-role" id="userRole">
+                    <i class="fas fa-briefcase"></i>
+                    Loading...
+                </p>
+            </div>
+        </div>
+
+        <div class="profile-details-grid">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <i class="fas fa-user"></i>
+                    Personal Information
+                </div>
+                <div class="detail-content">
+                    <div class="detail-row">
+                        <span class="detail-label">Username</span>
+                        <span class="detail-value" id="userUsername">Loading...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">ID Number</span>
+                        <span class="detail-value" id="userIdNumber">Loading...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Phone Number</span>
+                        <span class="detail-value" id="userPhone">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <i class="fas fa-clock"></i>
+                    Account Information
+                </div>
+                <div class="detail-content">
+                    <div class="detail-row">
+                        <span class="detail-label">Account Created</span>
+                        <span class="detail-value" id="userCreated">Loading...</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="userUpdated">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Edit Profile</h2>
+            <button class="close" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label for="editFullName" class="form-label">Full Name *</label>
+                    <input type="text" class="form-control" id="editFullName" name="fullName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editUsername" class="form-label">Username *</label>
+                    <input type="text" class="form-control" id="editUsername" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdNumber" class="form-label">ID Number *</label>
+                    <input type="text" class="form-control" id="editIdNumber" name="idNumber" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editPhone" class="form-label">Phone Number *</label>
+                    <input type="text" class="form-control" id="editPhone" name="phoneNumber" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editImage" class="form-label">Profile Image</label>
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-secondary" type="button">
+                            <i class="fas fa-upload"></i>
+                            Choose Image
+                        </button>
+                        <input type="file" id="editImage" name="image" accept="image/*">
+                    </div>
+                    <div class="file-display" id="fileName" style="display: none;"></div>
+                </div>
+
+                <div class="password-section">
+                    <h3>
+                        <i class="fas fa-lock"></i>
+                        Change Password
+                    </h3>
+                    <div class="form-group">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" name="currentPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveProfileBtn" form="editProfileForm">
+                <i class="fas fa-save"></i>
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Function to format dates
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        }
+
+        // Load user profile data
+        function loadUserProfile() {
+            $.ajax({
+                url: "/api/users/me",
+                method: "GET",
+                success: function(user) {
+                    $("#userName").text(user.fullName);
+                    $("#userRole").text(user.role);
+                    $("#userUsername").text(user.username);
+                    $("#userIdNumber").text(user.idNumber);
+                    $("#userPhone").text(user.phoneNumber);
+                    $("#userCreated").text(formatDate(user.created));
+                    $("#userUpdated").text(formatDate(user.updated));
+
+                    // Populate the edit form with current data
+                    $("#editFullName").val(user.fullName);
+                    $("#editUsername").val(user.username);
+                    $("#editIdNumber").val(user.idNumber);
+                    $("#editPhone").val(user.phoneNumber);
+
+                    if (user.image) {
+                        $("#userImage").attr("src", `/api/users/employee-image/${user.image}`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading profile:", error);
+                    showAlert("Error loading profile. Please try again later.", "error");
+                },
+            });
+        }
+
+        // Initialize the page
+        loadUserProfile();
+
+        // Modal handling: Open modal on button click
+        $("#editProfileBtn").click(function() {
+            $("#editProfileModal").show();
+            $("#editFullName").focus();
+        });
+
+        // Close modal events
+        $("#closeModal, #cancelBtn").click(function() {
+            closeModal();
+        });
+
+        // Close modal when clicking outside the modal content
+        $('.modal').click(function(e) {
+            if (e.target === this) {
+                $(this).hide();
+            }
+        });
+
+        function closeModal() {
+            $("#editProfileModal").hide();
+            $("#editProfileForm")[0].reset();
+            $("#fileName").hide().text("");
+        }
+
+        // File input handler to display selected file name
+        $("#editImage").change(function() {
+            var fileName = $(this).val().split("\\").pop();
+            if (fileName) {
+                $("#fileName").show().html(`<i class="fas fa-file-image"></i> ${fileName}`);
+            } else {
+                $("#fileName").hide().text("");
+            }
+        });
+
+        // Handle form submission
+        $("#editProfileForm").on("submit", function(e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+
+            // Create a user data object with form values
+            var userData = {
+                fullName: $("#editFullName").val(),
+                username: $("#editUsername").val(),
+                idNumber: $("#editIdNumber").val(),
+                phoneNumber: $("#editPhone").val(),
+            };
+
+            // Handle password update if any password fields are filled
+            var newPassword = $("#newPassword").val();
+            var confirmPassword = $("#confirmPassword").val();
+            var currentPassword = $("#currentPassword").val();
+
+            if (newPassword || confirmPassword || currentPassword) {
+                if (newPassword !== confirmPassword) {
+                    showAlert("New passwords do not match!", "error");
+                    return;
+                }
+                if (!currentPassword) {
+                    showAlert("Current password is required to change password!", "error");
+                    return;
+                }
+                userData.password = newPassword;
+                userData.currentPassword = currentPassword;
+            }
+
+            // Append the user data as a JSON blob to the form data
+            formData.append(
+                "user",
+                new Blob([JSON.stringify(userData)], { type: "application/json" })
+            );
+
+            $.ajax({
+                url: "/api/users/me",
+                method: "PUT",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    showAlert("Profile updated successfully!", "success");
+                    loadUserProfile();
+                    closeModal();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error updating profile:", error);
+                    showAlert("Error updating profile. Please try again.", "error");
+                },
+            });
+        });
+
+        // Custom alert function (matching your fragment system)
+        function showAlert(message, type) {
+            const alertDiv = $(`
+                <div class="alert ${type}" style="position: fixed; top: 20px; right: 20px; z-index: 3000;
+                     padding: 1rem 1.5rem; border-radius: 12px; color: white; font-weight: 500;
+                     max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                     background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' : 'linear-gradient(135deg, #e74c3c, #c0392b)'};
+                     animation: slideInRight 0.3s ease;">
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Make showAlert available globally if needed
+        window.showAlert = showAlert;
+    });
+</script>
+</body>
+</html>
