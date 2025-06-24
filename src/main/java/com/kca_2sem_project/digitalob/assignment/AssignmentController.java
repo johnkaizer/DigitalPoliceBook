@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -27,18 +29,29 @@ public class AssignmentController {
 
     // Create a new assignment
     @PostMapping
-    public ResponseEntity<Assignment> createAssignment(
-            @RequestParam Long caseId,
-            @RequestParam Long officerId,
-            @RequestParam(defaultValue = "MEDIUM") String priority,
-            @RequestParam(required = false) String assignmentNotes,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dueDate) {
-
+    public ResponseEntity<Assignment> createAssignment(@RequestBody Map<String, Object> requestData) {
         try {
             // Get the logged-in admin from session
             User loggedInAdmin = (User) session.getAttribute("loggedInUser");
             if (loggedInAdmin == null) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+
+            // Extract parameters from request body
+            Long caseId = Long.valueOf(requestData.get("caseId").toString());
+            Long officerId = Long.valueOf(requestData.get("assignedOfficerId").toString()); // Note: frontend sends "assignedOfficerId"
+            String priority = requestData.getOrDefault("priority", "MEDIUM").toString();
+            String assignmentNotes = requestData.get("assignmentNotes") != null ?
+                    requestData.get("assignmentNotes").toString() : null;
+
+            LocalDateTime dueDate = null;
+            if (requestData.get("dueDate") != null && !requestData.get("dueDate").toString().isEmpty()) {
+                String dueDateStr = requestData.get("dueDate").toString();
+                // Handle the date format from frontend (e.g., "2025-06-30T08:52")
+                if (dueDateStr.length() == 16) { // Format: "2025-06-30T08:52"
+                    dueDateStr += ":00"; // Add seconds
+                }
+                dueDate = LocalDateTime.parse(dueDateStr);
             }
 
             String adminName = loggedInAdmin.getFullName();
@@ -61,8 +74,31 @@ public class AssignmentController {
 
             return new ResponseEntity<>(savedAssignment, HttpStatus.CREATED);
 
+        } catch (NumberFormatException e) {
+            User loggedInAdmin = (User) session.getAttribute("loggedInUser");
+            String adminName = loggedInAdmin != null ? loggedInAdmin.getFullName() : "Unknown Admin";
+
+            logService.logAction(
+                    adminName,
+                    "ASSIGNMENT_CREATE_ERROR",
+                    "Failed to create assignment: Invalid number format - " + e.getMessage()
+            );
+
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+
+        } catch (DateTimeParseException e) {
+            User loggedInAdmin = (User) session.getAttribute("loggedInUser");
+            String adminName = loggedInAdmin != null ? loggedInAdmin.getFullName() : "Unknown Admin";
+
+            logService.logAction(
+                    adminName,
+                    "ASSIGNMENT_CREATE_ERROR",
+                    "Failed to create assignment: Invalid date format - " + e.getMessage()
+            );
+
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+
         } catch (RuntimeException e) {
-            // Log the error
             User loggedInAdmin = (User) session.getAttribute("loggedInUser");
             String adminName = loggedInAdmin != null ? loggedInAdmin.getFullName() : "Unknown Admin";
 
@@ -250,12 +286,21 @@ public class AssignmentController {
         }
     }
 
-    // Update assignment status
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Assignment> updateAssignmentStatus(@PathVariable("id") Long id, @RequestParam String status) {
+    // Update assignment status - FIXED: Added PUT mapping to match frontend expectations
+    @PutMapping("/{id}/status")
+    @PatchMapping("/{id}/status") // Keep both for compatibility
+    public ResponseEntity<Assignment> updateAssignmentStatus(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, String> statusUpdate) {
         try {
             User loggedInUser = (User) session.getAttribute("loggedInUser");
             String username = loggedInUser != null ? loggedInUser.getFullName() : "Unknown User";
+
+            // Get status from request body
+            String status = statusUpdate.get("status");
+            if (status == null || status.trim().isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
 
             // Get existing assignment to log the status change
             Optional<Assignment> existingAssignmentOpt = assignmentService.getAssignmentById(id);
@@ -354,17 +399,24 @@ public class AssignmentController {
         }
     }
 
-    // Reassign case to different officer
+    // Reassign case to different officer - FIXED: Changed to accept JSON body instead of request params
     @PostMapping("/{assignmentId}/reassign")
     public ResponseEntity<Assignment> reassignCase(
             @PathVariable("assignmentId") Long assignmentId,
-            @RequestParam Long newOfficerId,
-            @RequestParam String reason) {
+            @RequestBody Map<String, Object> requestData) {
 
         try {
             User loggedInAdmin = (User) session.getAttribute("loggedInUser");
             if (loggedInAdmin == null) {
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
+
+            // Extract parameters from request body
+            Long newOfficerId = Long.valueOf(requestData.get("newOfficerId").toString());
+            String reason = requestData.get("reason").toString();
+
+            if (newOfficerId == null || reason == null || reason.trim().isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
             String adminName = loggedInAdmin.getFullName();
@@ -387,6 +439,8 @@ public class AssignmentController {
             } else {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
+        } catch (NumberFormatException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

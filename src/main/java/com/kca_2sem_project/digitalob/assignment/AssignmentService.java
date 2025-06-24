@@ -4,6 +4,7 @@ import com.kca_2sem_project.digitalob.casesmanagement.Case;
 import com.kca_2sem_project.digitalob.casesmanagement.CaseRepository;
 import com.kca_2sem_project.digitalob.usersmanagement.User;
 import com.kca_2sem_project.digitalob.usersmanagement.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class AssignmentService {
 
     @Autowired
@@ -23,108 +25,90 @@ public class AssignmentService {
     @Autowired
     private UserRepository userRepository;
 
-    // Create a new assignment
-    public Assignment createAssignment(Long caseId, Long officerId, Long assignedById, String priority,
-                                       String assignmentNotes, LocalDateTime dueDate) {
+    // Get all assignments with relationships loaded
+    public List<Assignment> getAllAssignments() {
+        return assignmentRepository.findAllWithRelationships();
+    }
 
-        // Fetch the case
-        Optional<Case> caseOpt = caseRepository.findById(caseId);
-        if (!caseOpt.isPresent()) {
-            throw new RuntimeException("Case not found with ID: " + caseId);
-        }
+    // Get assignment by ID with relationships loaded
+    public Optional<Assignment> getAssignmentById(Long id) {
+        return assignmentRepository.findByIdWithRelationships(id);
+    }
 
-        // Fetch the officer
-        Optional<User> officerOpt = userRepository.findById(officerId);
-        if (!officerOpt.isPresent()) {
-            throw new RuntimeException("Officer not found with ID: " + officerId);
-        }
+    // Create assignment
+    public Assignment createAssignment(Long caseId, Long officerId, Long assignedById,
+                                       String priority, String assignmentNotes, LocalDateTime dueDate) {
 
-        // Fetch the admin who is making the assignment
-        Optional<User> adminOpt = userRepository.findById(assignedById);
-        if (!adminOpt.isPresent()) {
-            throw new RuntimeException("Admin not found with ID: " + assignedById);
-        }
+        Case assignedCase = caseRepository.findById(caseId)
+                .orElseThrow(() -> new RuntimeException("Case not found with ID: " + caseId));
 
-        // Check if case is already assigned to this officer
-        Optional<Assignment> existingAssignment = assignmentRepository
-                .findActiveCaseAssignmentToOfficer(caseId, officerId);
-        if (existingAssignment.isPresent()) {
-            throw new RuntimeException("Case is already assigned to this officer");
-        }
+        User assignedOfficer = userRepository.findById(officerId)
+                .orElseThrow(() -> new RuntimeException("Officer not found with ID: " + officerId));
+
+        User assignedBy = userRepository.findById(assignedById)
+                .orElseThrow(() -> new RuntimeException("Admin not found with ID: " + assignedById));
 
         Assignment assignment = new Assignment();
-        assignment.setAssignedCase(caseOpt.get());
-        assignment.setAssignedOfficer(officerOpt.get());
-        assignment.setAssignedBy(adminOpt.get());
+        assignment.setAssignedCase(assignedCase);
+        assignment.setAssignedOfficer(assignedOfficer);
+        assignment.setAssignedBy(assignedBy);
         assignment.setPriority(priority);
         assignment.setAssignmentNotes(assignmentNotes);
         assignment.setDueDate(dueDate);
+        assignment.setAssignmentStatus("ASSIGNED");
 
         return assignmentRepository.save(assignment);
     }
 
-    // Get all assignments
-    public List<Assignment> getAllAssignments() {
-        return assignmentRepository.findAll();
-    }
-
-    // Get assignment by ID
-    public Optional<Assignment> getAssignmentById(Long id) {
-        return assignmentRepository.findById(id);
-    }
-
     // Get assignments by case ID
     public List<Assignment> getAssignmentsByCaseId(Long caseId) {
-        return assignmentRepository.findByAssignedCaseId(caseId);
+        return assignmentRepository.findByCaseIdWithRelationships(caseId);
     }
 
     // Get assignments by officer ID
     public List<Assignment> getAssignmentsByOfficerId(Long officerId) {
-        return assignmentRepository.findByAssignedOfficerId(officerId);
+        return assignmentRepository.findByOfficerIdWithRelationships(officerId);
     }
 
-    // Get assignments by officer badge number
+    // Get assignments by officer badge
     public List<Assignment> getAssignmentsByOfficerBadge(String badgeNumber) {
-        return assignmentRepository.findByOfficerBadgeNumber(badgeNumber);
+        return assignmentRepository.findByOfficerBadgeWithRelationships(badgeNumber);
     }
 
     // Get assignments by status
     public List<Assignment> getAssignmentsByStatus(String status) {
-        return assignmentRepository.findByAssignmentStatus(status);
+        return assignmentRepository.findByStatusWithRelationships(status);
     }
 
     // Get assignments by priority
     public List<Assignment> getAssignmentsByPriority(String priority) {
-        return assignmentRepository.findByPriority(priority);
+        return assignmentRepository.findByPriorityWithRelationships(priority);
     }
 
-    // Get active assignments for an officer
+    // Get active assignments for officer
     public List<Assignment> getActiveAssignmentsByOfficer(Long officerId) {
-        return assignmentRepository.findActiveAssignmentsByOfficer(officerId);
+        return assignmentRepository.findActiveByOfficerIdWithRelationships(officerId);
     }
 
-    // Get completed assignments for an officer
+    // Get completed assignments for officer
     public List<Assignment> getCompletedAssignmentsByOfficer(Long officerId) {
-        return assignmentRepository.findCompletedAssignmentsByOfficer(officerId);
+        return assignmentRepository.findCompletedByOfficerIdWithRelationships(officerId);
     }
 
     // Get overdue assignments
     public List<Assignment> getOverdueAssignments() {
-        return assignmentRepository.findOverdueAssignments(LocalDateTime.now());
+        return assignmentRepository.findOverdueWithRelationships();
     }
 
     // Update assignment status
     public Assignment updateAssignmentStatus(Long id, String status) {
-        Optional<Assignment> assignmentOpt = assignmentRepository.findById(id);
+        Optional<Assignment> assignmentOpt = assignmentRepository.findByIdWithRelationships(id);
         if (assignmentOpt.isPresent()) {
             Assignment assignment = assignmentOpt.get();
             assignment.setAssignmentStatus(status);
-
-            // Set completion date if status is COMPLETED
-            if ("COMPLETED".equals(status)) {
+            if (status.equals("COMPLETED")) {
                 assignment.setCompletedDate(LocalDateTime.now());
             }
-
             return assignmentRepository.save(assignment);
         }
         return null;
@@ -132,7 +116,7 @@ public class AssignmentService {
 
     // Update assignment priority
     public Assignment updateAssignmentPriority(Long id, String priority) {
-        Optional<Assignment> assignmentOpt = assignmentRepository.findById(id);
+        Optional<Assignment> assignmentOpt = assignmentRepository.findByIdWithRelationships(id);
         if (assignmentOpt.isPresent()) {
             Assignment assignment = assignmentOpt.get();
             assignment.setPriority(priority);
@@ -143,7 +127,7 @@ public class AssignmentService {
 
     // Update assignment due date
     public Assignment updateAssignmentDueDate(Long id, LocalDateTime dueDate) {
-        Optional<Assignment> assignmentOpt = assignmentRepository.findById(id);
+        Optional<Assignment> assignmentOpt = assignmentRepository.findByIdWithRelationships(id);
         if (assignmentOpt.isPresent()) {
             Assignment assignment = assignmentOpt.get();
             assignment.setDueDate(dueDate);
@@ -154,7 +138,7 @@ public class AssignmentService {
 
     // Update assignment notes
     public Assignment updateAssignmentNotes(Long id, String notes) {
-        Optional<Assignment> assignmentOpt = assignmentRepository.findById(id);
+        Optional<Assignment> assignmentOpt = assignmentRepository.findByIdWithRelationships(id);
         if (assignmentOpt.isPresent()) {
             Assignment assignment = assignmentOpt.get();
             assignment.setAssignmentNotes(notes);
@@ -163,30 +147,32 @@ public class AssignmentService {
         return null;
     }
 
-    // Reassign case to different officer
+    // Reassign case
     public Assignment reassignCase(Long assignmentId, Long newOfficerId, Long reassignedById, String reason) {
-        Optional<Assignment> assignmentOpt = assignmentRepository.findById(assignmentId);
-        Optional<User> newOfficerOpt = userRepository.findById(newOfficerId);
-        Optional<User> adminOpt = userRepository.findById(reassignedById);
+        Optional<Assignment> existingAssignmentOpt = assignmentRepository.findByIdWithRelationships(assignmentId);
+        if (existingAssignmentOpt.isPresent()) {
+            Assignment existingAssignment = existingAssignmentOpt.get();
 
-        if (assignmentOpt.isPresent() && newOfficerOpt.isPresent() && adminOpt.isPresent()) {
-            Assignment oldAssignment = assignmentOpt.get();
-
-            // Mark old assignment as reassigned
-            oldAssignment.setAssignmentStatus("REASSIGNED");
-            oldAssignment.setAssignmentNotes(oldAssignment.getAssignmentNotes() +
-                    "\n[REASSIGNED] " + reason);
-            assignmentRepository.save(oldAssignment);
+            // Mark existing assignment as reassigned
+            existingAssignment.setAssignmentStatus("REASSIGNED");
+            existingAssignment.setCompletedDate(LocalDateTime.now());
+            assignmentRepository.save(existingAssignment);
 
             // Create new assignment
+            User newOfficer = userRepository.findById(newOfficerId)
+                    .orElseThrow(() -> new RuntimeException("Officer not found with ID: " + newOfficerId));
+
+            User reassignedBy = userRepository.findById(reassignedById)
+                    .orElseThrow(() -> new RuntimeException("Admin not found with ID: " + reassignedById));
+
             Assignment newAssignment = new Assignment();
-            newAssignment.setAssignedCase(oldAssignment.getAssignedCase());
-            newAssignment.setAssignedOfficer(newOfficerOpt.get());
-            newAssignment.setAssignedBy(adminOpt.get());
-            newAssignment.setPriority(oldAssignment.getPriority());
-            newAssignment.setAssignmentNotes("[REASSIGNED FROM " +
-                    oldAssignment.getOfficerBadgeNumber() + "] " + reason);
-            newAssignment.setDueDate(oldAssignment.getDueDate());
+            newAssignment.setAssignedCase(existingAssignment.getAssignedCase());
+            newAssignment.setAssignedOfficer(newOfficer);
+            newAssignment.setAssignedBy(reassignedBy);
+            newAssignment.setPriority(existingAssignment.getPriority());
+            newAssignment.setDueDate(existingAssignment.getDueDate());
+            newAssignment.setAssignmentNotes(reason);
+            newAssignment.setAssignmentStatus("ASSIGNED");
 
             return assignmentRepository.save(newAssignment);
         }
@@ -204,15 +190,15 @@ public class AssignmentService {
 
     // Get assignments by department
     public List<Assignment> getAssignmentsByDepartment(String department) {
-        return assignmentRepository.findByOfficerDepartment(department);
+        return assignmentRepository.findByDepartmentWithRelationships(department);
     }
 
     // Get assignments by case type
     public List<Assignment> getAssignmentsByCaseType(String caseType) {
-        return assignmentRepository.findByCaseType(caseType);
+        return assignmentRepository.findByCaseTypeWithRelationships(caseType);
     }
 
-    // Get assignment statistics
+    // Get assignment count by status
     public long getAssignmentCountByStatus(String status) {
         return assignmentRepository.countByAssignmentStatus(status);
     }

@@ -335,4 +335,87 @@ public class CaseController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    // Add this method to your existing CaseController class
+
+    @GetMapping("/mapping")
+    public ResponseEntity<List<CaseLocationMapping>> getCasesMapping() {
+        try {
+            List<CaseLocationMapping> locationMappings = caseService.getCasesLocationMapping();
+
+            // Log the mapping access
+            User loggedInUser = (User) session.getAttribute("loggedInUser");
+            String username = loggedInUser != null ? loggedInUser.getFullName() : "Unknown User";
+
+            logService.logAction(
+                    username,
+                    "CASE_MAPPING_VIEWED",
+                    String.format("Cases mapping accessed by %s. Total locations: %d",
+                            username, locationMappings.size())
+            );
+
+            return new ResponseEntity<>(locationMappings, HttpStatus.OK);
+        } catch (Exception e) {
+            // Log the error
+            User loggedInUser = (User) session.getAttribute("loggedInUser");
+            String username = loggedInUser != null ? loggedInUser.getFullName() : "Unknown User";
+
+            logService.logAction(
+                    username,
+                    "CASE_MAPPING_ERROR",
+                    String.format("Error accessing cases mapping by %s: %s", username, e.getMessage())
+            );
+
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // DTO class for location mapping response
+    public static class CaseLocationMapping {
+        private String location;
+        private Long caseCount;
+        private List<CaseTypeSummary> caseTypes;
+        private String mostRecentCaseDate;
+
+        // Constructors
+        public CaseLocationMapping() {}
+
+        public CaseLocationMapping(String location, Long caseCount, List<CaseTypeSummary> caseTypes, String mostRecentCaseDate) {
+            this.location = location;
+            this.caseCount = caseCount;
+            this.caseTypes = caseTypes;
+            this.mostRecentCaseDate = mostRecentCaseDate;
+        }
+
+        // Getters and Setters
+        public String getLocation() { return location; }
+        public void setLocation(String location) { this.location = location; }
+
+        public Long getCaseCount() { return caseCount; }
+        public void setCaseCount(Long caseCount) { this.caseCount = caseCount; }
+
+        public List<CaseTypeSummary> getCaseTypes() { return caseTypes; }
+        public void setCaseTypes(List<CaseTypeSummary> caseTypes) { this.caseTypes = caseTypes; }
+
+        public String getMostRecentCaseDate() { return mostRecentCaseDate; }
+        public void setMostRecentCaseDate(String mostRecentCaseDate) { this.mostRecentCaseDate = mostRecentCaseDate; }
+    }
+
+    public static class CaseTypeSummary {
+        private String caseType;
+        private Long count;
+
+        public CaseTypeSummary() {}
+
+        public CaseTypeSummary(String caseType, Long count) {
+            this.caseType = caseType;
+            this.count = count;
+        }
+
+        // Getters and Setters
+        public String getCaseType() { return caseType; }
+        public void setCaseType(String caseType) { this.caseType = caseType; }
+
+        public Long getCount() { return count; }
+        public void setCount(Long count) { this.count = count; }
+    }
 }

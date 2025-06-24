@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Mapping</title>
+    <!-- Include Fragment Styles -->
+    <link rel="stylesheet" href="/static/css/fragment-styles.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/static/js/alerts.js"></script>
+    <style>
+        /* Additional styles specific to case mapping */
+        .location-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .location-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+        }
+
+        .location-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .location-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .case-count-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .case-types-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .case-type-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            box-shadow: 0 2px 6px rgba(155, 89, 182, 0.3);
+        }
+
+        .location-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .search-box-container {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .summary-card.total-locations {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        .summary-card.total-cases {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .summary-card.avg-cases {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+        }
+
+        .summary-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .location-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .location-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box-container {
+                min-width: unset;
+            }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #7f8c8d;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+<div class="fragment-container">
+    <!-- Fragment Header -->
+    <div class="fragment-header">
+        <h1 class="fragment-title">
+            <i class="fas fa-map-marked-alt"></i>
+            Case Mapping
+        </h1>
+        <button class="btn btn-primary" id="refreshBtn">
+            <i class="fas fa-sync-alt"></i>
+            Refresh Data
+        </button>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="summary-stats" id="summaryStats">
+        <div class="summary-card total-locations">
+            <div class="summary-number" id="totalLocations">0</div>
+            <div class="summary-label">Total Locations</div>
+        </div>
+        <div class="summary-card total-cases">
+            <div class="summary-number" id="totalCases">0</div>
+            <div class="summary-label">Total Cases</div>
+        </div>
+        <div class="summary-card avg-cases">
+            <div class="summary-number" id="avgCases">0</div>
+            <div class="summary-label">Avg Cases/Location</div>
+        </div>
+    </div>
+
+    <!-- Search Container -->
+    <div class="search-container">
+        <div class="search-box-container">
+            <input type="text" class="search-box" id="searchInput" placeholder="Search locations...">
+        </div>
+    </div>
+
+    <!-- Location Mapping Container -->
+    <div id="mappingContainer">
+        <!-- Location cards will be loaded here -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <i class="fas fa-map-marked-alt"></i>
+        <h3>No Location Data Found</h3>
+        <p>No cases with location information are available.</p>
+        <button class="btn btn-primary" onclick="window.location.href='/manage-cases'">
+            <i class="fas fa-plus"></i>
+            Add Cases
+        </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="spinner-sm"></div>
+        <p>Loading location data...</p>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        let locationMappings = [];
+
+        // Initialize the page
+        init();
+
+        function init() {
+            loadCaseMapping();
+            bindEvents();
+        }
+
+        function bindEvents() {
+            // Refresh button
+            $('#refreshBtn').click(function() {
+                loadCaseMapping();
+            });
+
+            // Search functionality
+            $('#searchInput').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                filterLocations(searchTerm);
+            });
+        }
+
+        function loadCaseMapping() {
+            showLoading(true);
+
+            $.ajax({
+                url: '/api/cases/mapping',
+                method: 'GET',
+                success: function(data) {
+                    locationMappings = data;
+                    renderLocationMapping(data);
+                    updateSummaryStats(data);
+                    showLoading(false);
+                },
+                error: function(xhr) {
+                    showLoading(false);
+
+                    // Handle 204 No Content (empty database) as success with empty array
+                    if (xhr.status === 204) {
+                        console.log('No location mapping data found');
+                        renderLocationMapping([]);
+                        updateSummaryStats([]);
+                        return;
+                    }
+
+                    // For other errors, show error message
+                    console.error('Error loading case mapping:', xhr);
+                    showAlert('Error loading case mapping: ' + (xhr.responseText || 'Server unavailable'), 'error');
+
+                    // Still render empty state
+                    renderLocationMapping([]);
+                    updateSummaryStats([]);
+                }
+            });
+        }
+
+        function renderLocationMapping(mappings) {
+            const container = $('#mappingContainer');
+            container.empty();
+
+            if (mappings.length === 0) {
+                $('#emptyState').show();
+                return;
+            }
+
+            $('#emptyState').hide();
+
+            mappings.forEach(mapping => {
+                const card = createLocationCard(mapping);
+                container.append(card);
+            });
+        }
+
+        function createLocationCard(mapping) {
+            const mostRecentDate = formatDate(mapping.mostRecentCaseDate);
+            const caseTypesHtml = mapping.caseTypes.map(type =>
+                `<span class="case-type-tag">${type.caseType} (${type.count})</span>`
+            ).join('');
+
+            return `
+                <div class="location-card" data-location="${mapping.location.toLowerCase()}">
+                    <div class="location-header">
+                        <h3 class="location-name">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${mapping.location}
+                        </h3>
+                        <span class="case-count-badge">
+                            <i class="fas fa-folder"></i>
+                            ${mapping.caseCount} Case${mapping.caseCount !== 1 ? 's' : ''}
+                        </span>
+                    </div>
+
+                    <div class="location-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Last Activity: <span class="stat-value">${mostRecentDate}</span></span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-tags"></i>
+                            <span>Case Types: <span class="stat-value">${mapping.caseTypes.length}</span></span>
+                        </div>
+                    </div>
+
+                    <div class="case-types-container">
+                        ${caseTypesHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSummaryStats(mappings) {
+            const totalLocations = mappings.length;
+            const totalCases = mappings.reduce((sum, mapping) => sum + mapping.caseCount, 0);
+            const avgCases = totalLocations > 0 ? Math.round((totalCases / totalLocations) * 10) / 10 : 0;
+
+            $('#totalLocations').text(totalLocations);
+            $('#totalCases').text(totalCases);
+            $('#avgCases').text(avgCases);
+        }
+
+        function filterLocations(searchTerm) {
+            const cards = $('.location-card');
+
+            if (!searchTerm) {
+                cards.show();
+                return;
+            }
+
+            cards.each(function() {
+                const card = $(this);
+                const locationName = card.data('location');
+
+                if (locationName.includes(searchTerm)) {
+                    card.show();
+                } else {
+                    card.hide();
+                }
+            });
+
+            // Check if any cards are visible
+            const visibleCards = $('.location-card:visible');
+            if (visibleCards.length === 0) {
+                $('#mappingContainer').append(`
+                    <div class="no-results" id="noResults">
+                        <i class="fas fa-search"></i>
+                        <h3>No locations found</h3>
+                        <p>No locations match your search term "${searchTerm}"</p>
+                    </div>
+                `);
+            } else {
+                $('#noResults').remove();
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString || dateString === 'N/A') return 'N/A';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } catch (e) {
+                return 'N/A';
+            }
+        }
+
+        function showLoading(show) {
+            if (show) {
+                $('#loadingOverlay').show();
+            } else {
+                $('#loadingOverlay').hide();
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = $(`
+                <div class="alert ${type}" style="position: fixed; top: 20px; right: 20px; z-index: 3000;
+                     padding: 1rem 1.5rem; border-radius: 12px; color: white; font-weight: 500;
+                     max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                     background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' : 'linear-gradient(135deg, #e74c3c, #c0392b)'};
+                     animation: slideInRight 0.3s ease;">
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    });
+</script>
+</body>
+</html>

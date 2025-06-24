@@ -13,66 +13,122 @@ import java.util.Optional;
 @Repository
 public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
 
-    // Find assignments by case
-    List<Assignment> findByAssignedCase(Case assignedCase);
+    // Find all assignments with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findAllWithRelationships();
 
-    // Find assignments by case ID
-    List<Assignment> findByAssignedCaseId(Long caseId);
+    // Find assignment by ID with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.id = :id")
+    Optional<Assignment> findByIdWithRelationships(@Param("id") Long id);
 
-    // Find assignments by officer
-    List<Assignment> findByAssignedOfficer(User assignedOfficer);
+    // Find assignments by case ID with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignedCase.id = :caseId " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findByCaseIdWithRelationships(@Param("caseId") Long caseId);
 
-    // Find assignments by officer ID
-    List<Assignment> findByAssignedOfficerId(Long officerId);
+    // Find assignments by officer ID with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignedOfficer.id = :officerId " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findByOfficerIdWithRelationships(@Param("officerId") Long officerId);
 
-    // Find assignments by officer badge number
-    @Query("SELECT a FROM Assignment a WHERE a.assignedOfficer.badgeNumber = :badgeNumber")
-    List<Assignment> findByOfficerBadgeNumber(@Param("badgeNumber") String badgeNumber);
+    // Find assignments by officer badge with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignedOfficer.badgeNumber = :badgeNumber " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findByOfficerBadgeWithRelationships(@Param("badgeNumber") String badgeNumber);
 
-    // Find assignments by status
-    List<Assignment> findByAssignmentStatus(String assignmentStatus);
+    // Find assignments by status with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignmentStatus = :status " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findByStatusWithRelationships(@Param("status") String status);
 
-    // Find assignments by priority
-    List<Assignment> findByPriority(String priority);
+    // Find assignments by priority with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.priority = :priority " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findByPriorityWithRelationships(@Param("priority") String priority);
 
-    // Find assignments by admin who assigned
-    List<Assignment> findByAssignedBy(User assignedBy);
+    // Find active assignments by officer ID with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignedOfficer.id = :officerId " +
+            "AND a.assignmentStatus IN ('ASSIGNED', 'IN_PROGRESS') " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findActiveByOfficerIdWithRelationships(@Param("officerId") Long officerId);
 
-    // Find assignments by admin ID
-    List<Assignment> findByAssignedById(Long assignedById);
+    // Find completed assignments by officer ID with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignedOfficer.id = :officerId " +
+            "AND a.assignmentStatus = 'COMPLETED' " +
+            "ORDER BY a.completedDate DESC")
+    List<Assignment> findCompletedByOfficerIdWithRelationships(@Param("officerId") Long officerId);
 
-    // Find assignments due before a certain date
-    List<Assignment> findByDueDateBefore(LocalDateTime dueDate);
+    // Find overdue assignments with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.dueDate < CURRENT_TIMESTAMP " +
+            "AND a.assignmentStatus != 'COMPLETED' " +
+            "ORDER BY a.dueDate ASC")
+    List<Assignment> findOverdueWithRelationships();
 
-    // Find overdue assignments (due date passed and not completed)
-    @Query("SELECT a FROM Assignment a WHERE a.dueDate < :currentDate AND a.assignmentStatus NOT IN ('COMPLETED', 'REASSIGNED')")
-    List<Assignment> findOverdueAssignments(@Param("currentDate") LocalDateTime currentDate);
+    // Find assignments by department with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignedOfficer.department = :department " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findByDepartmentWithRelationships(@Param("department") String department);
 
-    // Find active assignments for an officer
-    @Query("SELECT a FROM Assignment a WHERE a.assignedOfficer.id = :officerId AND a.assignmentStatus IN ('ASSIGNED', 'IN_PROGRESS')")
-    List<Assignment> findActiveAssignmentsByOfficer(@Param("officerId") Long officerId);
-
-    // Find completed assignments for an officer
-    @Query("SELECT a FROM Assignment a WHERE a.assignedOfficer.id = :officerId AND a.assignmentStatus = 'COMPLETED'")
-    List<Assignment> findCompletedAssignmentsByOfficer(@Param("officerId") Long officerId);
-
-    // Check if a case is already assigned to an officer
-    @Query("SELECT a FROM Assignment a WHERE a.assignedCase.id = :caseId AND a.assignedOfficer.id = :officerId AND a.assignmentStatus NOT IN ('COMPLETED', 'REASSIGNED')")
-    Optional<Assignment> findActiveCaseAssignmentToOfficer(@Param("caseId") Long caseId, @Param("officerId") Long officerId);
-
-    // Find assignments by case type through case relationship
-    @Query("SELECT a FROM Assignment a WHERE a.assignedCase.caseType = :caseType")
-    List<Assignment> findByCaseType(@Param("caseType") String caseType);
-
-    // Find assignments by date range
-    @Query("SELECT a FROM Assignment a WHERE a.assignmentDate BETWEEN :startDate AND :endDate")
-    List<Assignment> findByAssignmentDateBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    // Find assignments by case type with relationships loaded
+    @Query("SELECT a FROM Assignment a " +
+            "LEFT JOIN FETCH a.assignedCase " +
+            "LEFT JOIN FETCH a.assignedOfficer " +
+            "LEFT JOIN FETCH a.assignedBy " +
+            "WHERE a.assignedCase.caseType = :caseType " +
+            "ORDER BY a.created DESC")
+    List<Assignment> findByCaseTypeWithRelationships(@Param("caseType") String caseType);
 
     // Count assignments by status
-    @Query("SELECT COUNT(a) FROM Assignment a WHERE a.assignmentStatus = :status")
-    long countByAssignmentStatus(@Param("status") String status);
+    long countByAssignmentStatus(String assignmentStatus);
 
-    // Find assignments by officer department
-    @Query("SELECT a FROM Assignment a WHERE a.assignedOfficer.department = :department")
-    List<Assignment> findByOfficerDepartment(@Param("department") String department);
+    // Additional useful queries
+    @Query("SELECT COUNT(a) FROM Assignment a WHERE a.assignedOfficer.id = :officerId AND a.assignmentStatus IN ('ASSIGNED', 'IN_PROGRESS')")
+    long countActiveAssignmentsByOfficer(@Param("officerId") Long officerId);
+
+    @Query("SELECT COUNT(a) FROM Assignment a WHERE a.dueDate < CURRENT_TIMESTAMP AND a.assignmentStatus != 'COMPLETED'")
+    long countOverdueAssignments();
 }

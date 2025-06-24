@@ -2,8 +2,9 @@ package com.kca_2sem_project.digitalob.casesmanagement;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CaseService {
@@ -96,5 +97,54 @@ public class CaseService {
             return caseRepository.save(caseToUpdate);
         }
         return null;
+    }
+
+    // Add this method to your existing CaseService class
+
+    public List<CaseController.CaseLocationMapping> getCasesLocationMapping() {
+        List<Case> allCases = caseRepository.findAll();
+
+        // Group cases by location
+        Map<String, List<Case>> locationGroups = allCases.stream()
+                .filter(c -> c.getCrimeLocation() != null && !c.getCrimeLocation().trim().isEmpty())
+                .collect(Collectors.groupingBy(Case::getCrimeLocation));
+
+        List<CaseController.CaseLocationMapping> mappings = new ArrayList<>();
+
+        for (Map.Entry<String, List<Case>> entry : locationGroups.entrySet()) {
+            String location = entry.getKey();
+            List<Case> locationCases = entry.getValue();
+
+            // Count total cases for this location
+            Long caseCount = (long) locationCases.size();
+
+            // Group by case type within this location
+            Map<String, Long> caseTypeCounts = locationCases.stream()
+                    .filter(c -> c.getCaseType() != null)
+                    .collect(Collectors.groupingBy(
+                            Case::getCaseType,
+                            Collectors.counting()
+                    ));
+
+            // Convert to CaseTypeSummary list
+            List<CaseController.CaseTypeSummary> caseTypes = caseTypeCounts.entrySet().stream()
+                    .map(typeEntry -> new CaseController.CaseTypeSummary(typeEntry.getKey(), typeEntry.getValue()))
+                    .sorted((a, b) -> Long.compare(b.getCount(), a.getCount())) // Sort by count descending
+                    .collect(Collectors.toList());
+
+            // Find most recent case date for this location
+            String mostRecentDate = locationCases.stream()
+                    .filter(c -> c.getCreated() != null)
+                    .max(Comparator.comparing(Case::getCreated))
+                    .map(c -> c.getCreated().toString())
+                    .orElse("N/A");
+
+            mappings.add(new CaseController.CaseLocationMapping(location, caseCount, caseTypes, mostRecentDate));
+        }
+
+        // Sort by case count descending
+        mappings.sort((a, b) -> Long.compare(b.getCaseCount(), a.getCaseCount()));
+
+        return mappings;
     }
 }
