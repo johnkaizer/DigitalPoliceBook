@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital OB System - Police Login</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -13,8 +14,8 @@
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -28,26 +29,24 @@
             position: relative;
         }
 
-        .medical-pattern {
+        .police-pattern {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
             opacity: 0.05;
-            background-image: radial-gradient(circle at 25% 25%, #fff 2px, transparent 2px),
-            radial-gradient(circle at 75% 75%, #fff 1px, transparent 1px);
-            background-size: 50px 50px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(26,54,93,0.3)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
             animation: drift 30s linear infinite;
         }
 
         @keyframes drift {
             0% { transform: translate(0, 0); }
-            100% { transform: translate(-50px, -50px); }
+            100% { transform: translate(-20px, -20px); }
         }
 
         .login-left {
-            background: linear-gradient(135deg, #2c5282 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%);
             color: white;
             flex: 1.2;
             display: flex;
@@ -60,18 +59,29 @@
             overflow: hidden;
         }
 
-        .medical-bg {
+        .login-left::before {
+            content: '';
             position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: pulse-medical 4s ease-in-out infinite;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,215,0,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,215,0,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
         }
 
-        @keyframes pulse-medical {
+        .police-bg {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse-police 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse-police {
             0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
-            50% { transform: scale(1.1) rotate(180deg); opacity: 0.1; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.1; }
         }
 
         .logo-container {
@@ -81,20 +91,21 @@
         }
 
         .logo-icon {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #48bb78, #38a169);
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            animation: float-medical 3s ease-in-out infinite;
+            box-shadow: 0 15px 35px rgba(255,215,0,0.3);
+            animation: float-police 3s ease-in-out infinite;
             position: relative;
+            border: 3px solid rgba(255, 255, 255, 0.2);
         }
 
-        @keyframes float-medical {
+        @keyframes float-police {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
@@ -102,70 +113,72 @@
         .logo-icon::before {
             content: '';
             position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            border-radius: 22px;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border-radius: 23px;
             z-index: -1;
             filter: blur(10px);
             opacity: 0.7;
         }
 
-        .logo-icon svg {
-            width: 50px;
-            height: 50px;
-            fill: white;
+        .logo-icon i {
+            font-size: 3rem;
+            color: #1a365d;
+            font-weight: 900;
             filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
         }
 
         .login-left h1 {
-            font-size: 2.8rem;
+            font-size: 3rem;
             font-weight: 700;
             margin-bottom: 1rem;
             position: relative;
             z-index: 2;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            background: linear-gradient(135deg, #ffffff, #e2e8f0);
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #ffffff, #ffd700);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
         .login-left .subtitle {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             opacity: 0.9;
             position: relative;
             z-index: 2;
-            max-width: 350px;
+            max-width: 400px;
             line-height: 1.6;
-            color: #cbd5e0;
+            color: #e2e8f0;
+            font-weight: 500;
         }
 
         .feature-list {
-            margin-top: 2rem;
+            margin-top: 2.5rem;
             text-align: left;
-            opacity: 0.8;
+            opacity: 0.85;
         }
 
         .feature-item {
             display: flex;
             align-items: center;
-            margin-bottom: 0.8rem;
-            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: #e2e8f0;
         }
 
-        .feature-item::before {
-            content: '✓';
-            color: #48bb78;
+        .feature-item i {
+            color: #ffd700;
             font-weight: bold;
-            margin-right: 0.8rem;
-            font-size: 1.1rem;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            width: 20px;
         }
 
         .login-right {
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             flex: 1;
             display: flex;
@@ -173,7 +186,7 @@
             justify-content: center;
             padding: 3rem;
             position: relative;
-            box-shadow: -20px 0 40px rgba(0,0,0,0.1);
+            box-shadow: -20px 0 40px rgba(26,54,93,0.1);
             border-left: 1px solid rgba(255,255,255,0.2);
         }
 
@@ -189,30 +202,30 @@
         }
 
         .login-right h2 {
-            font-size: 2.2rem;
-            color: #1a202c;
+            font-size: 2.5rem;
+            color: #1a365d;
             margin-bottom: 0.5rem;
             font-weight: 700;
         }
 
         .login-subtitle {
-            color: #4a5568;
+            color: #2d5a87;
             margin-bottom: 0;
-            font-size: 1rem;
-            font-weight: 400;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
 
         .input-group {
-            margin-bottom: 1.8rem;
+            margin-bottom: 2rem;
             position: relative;
         }
 
         .input-group label {
             display: block;
-            margin-bottom: 0.6rem;
-            color: #2d3748;
+            margin-bottom: 0.8rem;
+            color: #1a365d;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -223,21 +236,22 @@
 
         .input-group input {
             width: 100%;
-            padding: 1.1rem 1.2rem;
+            padding: 1.2rem 1.5rem;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: #f7fafc;
-            color: #2d3748;
+            color: #1a365d;
+            font-weight: 500;
         }
 
         .input-group input:focus {
             outline: none;
-            border-color: #48bb78;
+            border-color: #ffd700;
             background: white;
-            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
-            transform: translateY(-1px);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+            transform: translateY(-2px);
         }
 
         .input-group input::placeholder {
@@ -247,38 +261,39 @@
 
         .forgot-password {
             text-align: right;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
         }
 
         .forgot-password a {
-            color: #48bb78;
+            color: #2d5a87;
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.95rem;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
 
         .forgot-password a:hover {
-            color: #38a169;
+            color: #1a365d;
             text-decoration: underline;
         }
 
         .btn-login {
             width: 100%;
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%);
             color: white;
             border: none;
-            padding: 1.2rem 2rem;
+            padding: 1.3rem 2rem;
             border-radius: 12px;
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
             letter-spacing: 1px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+            box-shadow: 0 4px 15px rgba(26, 54, 93, 0.3);
+            border: 2px solid transparent;
         }
 
         .btn-login::before {
@@ -288,7 +303,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
             transition: left 0.6s;
         }
 
@@ -298,7 +313,8 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+            box-shadow: 0 8px 25px rgba(26, 54, 93, 0.4);
+            border-color: #ffd700;
         }
 
         .btn-login:active {
@@ -330,7 +346,7 @@
             width: 50px;
             height: 50px;
             border: 4px solid #e2e8f0;
-            border-top: 4px solid #48bb78;
+            border-top: 4px solid #ffd700;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -342,9 +358,9 @@
 
         .loading-text {
             margin-top: 1rem;
-            color: #2d3748;
+            color: #1a365d;
             font-size: 1rem;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         /* Modal Styles */
@@ -356,7 +372,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color: rgba(26, 54, 93, 0.7);
             backdrop-filter: blur(5px);
         }
 
@@ -367,8 +383,9 @@
             border-radius: 20px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 80px rgba(26, 54, 93, 0.4);
             animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid #ffd700;
         }
 
         @keyframes slideIn {
@@ -391,54 +408,57 @@
         }
 
         .modal h3 {
-            color: #1a202c;
+            color: #1a365d;
             margin-bottom: 1rem;
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             font-weight: 700;
         }
 
         .modal p {
-            color: #4a5568;
+            color: #2d5a87;
             margin-bottom: 1.5rem;
             line-height: 1.6;
         }
 
         .btn-verify, .btn-reset {
             width: 100%;
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%);
             color: white;
             border: none;
-            padding: 1.1rem;
+            padding: 1.2rem;
             border-radius: 12px;
             cursor: pointer;
             font-size: 1rem;
             font-weight: 600;
             margin-top: 1rem;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-verify:hover, .btn-reset:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(45, 55, 72, 0.3);
+            box-shadow: 0 8px 20px rgba(26, 54, 93, 0.4);
         }
 
         .footer {
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%);
             color: #e2e8f0;
             text-align: center;
-            padding: 1.2rem;
-            font-size: 0.9rem;
+            padding: 1.5rem;
+            font-size: 0.95rem;
+            border-top: 3px solid #ffd700;
         }
 
         .footer a {
-            color: #48bb78;
+            color: #ffd700;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .footer a:hover {
             text-decoration: underline;
-            color: #68d391;
+            color: #ffed4e;
         }
 
         /* Alert Styles */
@@ -449,19 +469,21 @@
             padding: 1.2rem 1.8rem;
             border-radius: 12px;
             color: white;
-            font-weight: 500;
+            font-weight: 600;
             z-index: 3000;
             animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
         }
 
         .alert.success {
-            background: linear-gradient(135deg, #48bb78, #38a169);
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border-left: 4px solid #1e8449;
         }
 
         .alert.error {
-            background: linear-gradient(135deg, #e53e3e, #c53030);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-left: 4px solid #922b21;
         }
 
         @keyframes slideInRight {
@@ -477,22 +499,21 @@
 
             .login-left {
                 flex: none;
-                min-height: 250px;
+                min-height: 300px;
                 padding: 2rem;
             }
 
             .login-left h1 {
-                font-size: 2.2rem;
+                font-size: 2.5rem;
             }
 
             .logo-icon {
-                width: 80px;
-                height: 80px;
+                width: 100px;
+                height: 100px;
             }
 
-            .logo-icon svg {
-                width: 40px;
-                height: 40px;
+            .logo-icon i {
+                font-size: 2.5rem;
             }
 
             .feature-list {
@@ -511,30 +532,48 @@
             }
 
             .login-right h2 {
-                font-size: 1.8rem;
+                font-size: 2rem;
+            }
+
+            .logo-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+            .logo-icon i {
+                font-size: 2rem;
             }
         }
     </style>
 </head>
 <body>
-<div class="medical-pattern"></div>
+<div class="police-pattern"></div>
 <div class="login-container">
     <div class="login-left">
-        <div class="medical-bg"></div>
+        <div class="police-bg"></div>
         <div class="logo-container">
             <div class="logo-icon">
-                <svg viewBox="0 0 24 24">
-                    <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
-                    <circle cx="12" cy="12" r="2"/>
-                </svg>
+                <i class="fas fa-shield-alt"></i>
             </div>
             <h1>Digital OB</h1>
-            <p class="subtitle">Advanced Occurrence Book Management For Kasarani Police Station</p>
+            <p class="subtitle">Advanced Occurrence Book Management System For Ruaraka Police Station</p>
             <div class="feature-list">
-                <div class="feature-item">OB Records Management</div>
-                <div class="feature-item">Officers Management</div>
-                <div class="feature-item">Secure Data Storage</div>
-                <div class="feature-item">Analytics & Reports</div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Secure OB Records Management</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Officers & Staff Management</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Encrypted Data Storage</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Analytics & Reports</span>
+                </div>
             </div>
         </div>
     </div>
@@ -542,25 +581,27 @@
         <div class="login-form-container">
             <div class="login-header">
                 <h2>Welcome Back</h2>
-                <p class="login-subtitle">Sign in to access your dashboard</p>
+                <p class="login-subtitle">Sign in to access your police dashboard</p>
             </div>
             <form id="loginForm">
                 <div class="input-group">
-                    <label for="username"> Username</label>
+                    <label for="username"><i class="fas fa-user"></i> Police ID / Username</label>
                     <div class="input-wrapper">
-                        <input type="text" id="username" placeholder="Enter your username" required>
+                        <input type="text" id="username" placeholder="Enter your police ID or username" required>
                     </div>
                 </div>
                 <div class="input-group">
-                    <label for="password">Password</label>
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
                     <div class="input-wrapper">
                         <input type="password" id="password" placeholder="Enter your secure password" required>
                     </div>
                 </div>
                 <div class="forgot-password">
-                    <a href="#">Forgot your password?</a>
+                    <a href="#"><i class="fas fa-key"></i> Forgot your password?</a>
                 </div>
-                <button type="submit" class="btn-login">Login</button>
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                </button>
             </form>
             <!-- Loading Overlay -->
             <div class="loading-overlay">
@@ -578,20 +619,22 @@
     <div class="modal-content">
         <span class="close">&times;</span>
         <div id="step1">
-            <h3>Reset Password</h3>
-            <p>Please enter your medical credentials to verify your identity and reset your password.</p>
+            <h3><i class="fas fa-key"></i> Reset Password</h3>
+            <p>Please enter your police credentials to verify your identity and reset your password.</p>
             <div class="input-group">
-                <label for="resetUsername">Medical ID / Username</label>
-                <input type="text" id="resetUsername" placeholder="Enter your medical ID or username" autocomplete="off">
+                <label for="resetUsername">Police ID / Username</label>
+                <input type="text" id="resetUsername" placeholder="Enter your police ID or username" autocomplete="off">
             </div>
             <div class="input-group">
                 <label for="resetIdNumber">Staff ID Number</label>
                 <input type="text" id="resetIdNumber" placeholder="Enter your staff ID number" autocomplete="off">
             </div>
-            <button type="button" class="btn-verify">Verify Identity</button>
+            <button type="button" class="btn-verify">
+                <i class="fas fa-user-check"></i> Verify Identity
+            </button>
         </div>
         <div id="step2" style="display: none;">
-            <h3>Set New Password</h3>
+            <h3><i class="fas fa-shield-alt"></i> Set New Password</h3>
             <p>Create a strong password for your Digital OB System account.</p>
             <div class="input-group">
                 <label for="newPassword">New Password</label>
@@ -601,12 +644,15 @@
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" id="confirmPassword" placeholder="Confirm your new password">
             </div>
-            <button type="button" class="btn-reset">Update Password</button>
+            <button type="button" class="btn-reset">
+                <i class="fas fa-save"></i> Update Password
+            </button>
         </div>
     </div>
 </div>
+
 <div class="footer">
-    Digital OB System | Developed and Maintained by MUSTAFA ABDIRAHMAN | Email: 21/00644@students.kcau.ac.ke
+    <i class="fas fa-shield-alt"></i> Digital OB System | Developed and Maintained by <a href="mailto:21/00644@students.kcau.ac.ke">MUSTAFA ABDIRAHMAN</a> | Email: 21/00644@students.kcau.ac.ke
 </div>
 
 <script>
@@ -633,7 +679,7 @@
 
             // Input validation
             if (!username || !password) {
-                showAlert('Both medical ID and password are required.', 'error');
+                showAlert('Both police ID and password are required.', 'error');
                 return;
             }
 
@@ -660,7 +706,7 @@
                         }, 1000);
                     } else {
                         // Unexpected response
-                        showAlert('Invalid credentials. Please check your medical ID and password.', 'error');
+                        showAlert('Invalid credentials. Please check your police ID and password.', 'error');
                         $('.loading-overlay').hide();
                         $('.btn-login').prop('disabled', false);
                     }
@@ -671,7 +717,7 @@
                     $('.btn-login').prop('disabled', false);
 
                     if (xhr.status === 401) {
-                        showAlert('Invalid credentials. Please check your medical ID and password.', 'error');
+                        showAlert('Invalid credentials. Please check your police ID and password.', 'error');
                     } else {
                         showAlert('System error. Please contact IT support if the problem persists.', 'error');
                     }
@@ -725,7 +771,7 @@
                     }
                 },
                 error: function () {
-                    showAlert('Invalid credentials. Please verify your medical ID and staff ID.', 'error');
+                    showAlert('Invalid credentials. Please verify your police ID and staff ID.', 'error');
                 }
             });
         });

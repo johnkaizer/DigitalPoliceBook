@@ -175,10 +175,26 @@
         closeAllDropdowns();
 
         if (confirm('Are you sure you want to logout?')) {
-            showAlert("Logout successful.", "success");
-            setTimeout(() => {
-                window.location.replace("/");
-            }, 1000);
+            fetch('/api/users/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        showAlert("Logout successful.", "success");
+                        setTimeout(() => {
+                            window.location.replace("/");
+                        }, 1000);
+                    } else {
+                        showAlert("Logout failed.", "error");
+                    }
+                })
+                .catch(error => {
+                    showAlert("An error occurred during logout. Please try again.", "error");
+                    console.error("Error during logout:", error);
+                });
         }
     }
 
