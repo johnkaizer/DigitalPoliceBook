@@ -3,6 +3,7 @@ package com.kca_2sem_project.digitalob.casesmanagement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -146,5 +147,93 @@ public class CaseService {
         mappings.sort((a, b) -> Long.compare(b.getCaseCount(), a.getCaseCount()));
 
         return mappings;
+    }
+    // Add these methods to your existing CaseService class
+
+    public Long getOpenCasesCount() {
+        return caseRepository.countByCaseStatusIn(Arrays.asList("OPEN", "UNDER_INVESTIGATION"));
+    }
+
+    public Long getResolvedCasesCount() {
+        return caseRepository.countByCaseStatusIn(Arrays.asList("CLOSED", "RESOLVED"));
+    }
+
+    public Long getUniqueLocationsCount() {
+        return caseRepository.countDistinctByCrimeLocationIsNotNull();
+    }
+
+    public Long getUniqueOfficersCount() {
+        return caseRepository.countDistinctByOfficerBadgeNumberIsNotNull();
+    }
+
+    public List<DashboardController.RecentActivity> getRecentCaseActivity(int limit) {
+        List<Case> recentCases = caseRepository.findTop10ByOrderByUpdatedDesc();
+
+        return recentCases.stream()
+                .limit(limit)
+                .map(this::convertToRecentActivity)
+                .collect(Collectors.toList());
+    }
+
+    private DashboardController.RecentActivity convertToRecentActivity(Case caseEntity) {
+        String activityType;
+        String icon;
+        String iconColor;
+        String description;
+
+        // Determine activity type based on case status and creation/update time
+        if (caseEntity.getCreated().equals(caseEntity.getUpdated())) {
+            activityType = "CASE_CREATED";
+            icon = "fas fa-plus-circle";
+            iconColor = "#3498db";
+            description = String.format("New %s case created at %s",
+                    caseEntity.getCaseType(), caseEntity.getCrimeLocation());
+        } else {
+            activityType = "CASE_UPDATED";
+            icon = getIconForCaseStatus(caseEntity.getCaseStatus());
+            iconColor = getColorForCaseStatus(caseEntity.getCaseStatus());
+            description = String.format("Case #%d updated - Status: %s",
+                    caseEntity.getId(), caseEntity.getCaseStatus());
+        }
+
+        // Format timestamp
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
+        String timestamp = caseEntity.getUpdated().format(formatter);
+
+        return new DashboardController.RecentActivity(
+                activityType,
+                description,
+                timestamp,
+                icon,
+                iconColor
+        );
+    }
+
+    private String getIconForCaseStatus(String status) {
+        switch (status.toUpperCase()) {
+            case "OPEN":
+                return "fas fa-folder-open";
+            case "UNDER_INVESTIGATION":
+                return "fas fa-search";
+            case "CLOSED":
+            case "RESOLVED":
+                return "fas fa-check-circle";
+            default:
+                return "fas fa-file";
+        }
+    }
+
+    private String getColorForCaseStatus(String status) {
+        switch (status.toUpperCase()) {
+            case "OPEN":
+                return "#e74c3c";
+            case "UNDER_INVESTIGATION":
+                return "#f39c12";
+            case "CLOSED":
+            case "RESOLVED":
+                return "#27ae60";
+            default:
+                return "#95a5a6";
+        }
     }
 }

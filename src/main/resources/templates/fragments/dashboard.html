@@ -420,11 +420,11 @@
             <h3 id="openCases">0</h3>
             <p>Open Cases</p>
         </div>
-        <div class="stat-card resolved-cases">
-            <i class="fas fa-check-circle"></i>
-            <h3 id="resolvedCases">0</h3>
-            <p>Resolved Cases</p>
-        </div>
+<!--        <div class="stat-card resolved-cases">-->
+<!--            <i class="fas fa-check-circle"></i>-->
+<!--            <h3 id="resolvedCases">0</h3>-->
+<!--            <p>Resolved Cases</p>-->
+<!--        </div>-->
         <div class="stat-card locations">
             <i class="fas fa-map-marker-alt"></i>
             <h3 id="locationsMapped">0</h3>
@@ -487,21 +487,6 @@
                     animateNumber('#locationsMapped', 23);
                 }
             });
-        }
-
-        // Function to show alert messages
-        function showAlert(message, type) {
-            const alertDiv = $(`
-                <div class="alert ${type}">
-                    ${message}
-                </div>
-            `);
-
-            $('body').append(alertDiv);
-
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 5000);
         }
 
         // Initialize dashboard - fetch data when page loads

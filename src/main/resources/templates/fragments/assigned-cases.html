@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assignments</title>
+    <!-- Include Fragment Styles -->
+    <link rel="stylesheet" href="/static/css/fragment-styles.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/static/js/alerts.js"></script>
+    <style>
+        /* Additional styles specific to assignments management */
+        .assignment-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-assigned {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .status-in_progress {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .status-completed {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .status-reassigned {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .priority-urgent {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .priority-high {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+        }
+
+        .priority-medium {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .priority-low {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .assignment-id {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #1a365d;
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(26, 54, 93, 0.2);
+        }
+
+        .officer-info-card {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            border: 1px solid #c3e6cb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .officer-info-card h3 {
+            color: #155724;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .officer-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #155724;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .stat-total { color: #3498db; }
+        .stat-assigned { color: #2980b9; }
+        .stat-progress { color: #f39c12; }
+        .stat-completed { color: #27ae60; }
+        .stat-overdue { color: #e74c3c; }
+
+        /* Search Container */
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .search-box-container {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        .filter-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .status-filter {
+            padding: 0.75rem 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+            color: #495057;
+            min-width: 180px;
+            transition: all 0.3s ease;
+        }
+
+        .status-filter:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .overdue-highlight {
+            background-color: #fff5f5;
+            border-left: 4px solid #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box-container {
+                min-width: unset;
+            }
+
+            .filter-container {
+                justify-content: flex-start;
+            }
+
+            .officer-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="fragment-container">
+    <!-- Fragment Header -->
+    <div class="fragment-header">
+        <h1 class="fragment-title">
+            <i class="fas fa-tasks"></i>
+            My Assignments
+        </h1>
+        <button class="btn btn-secondary" id="refreshBtn">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Officer Information Card -->
+    <div class="officer-info-card" id="officerInfoCard" style="display: none;">
+        <h3>
+            <i class="fas fa-shield-alt"></i>
+            Officer Information
+        </h3>
+        <div class="officer-details-grid">
+            <div class="detail-item">
+                <span class="detail-label">Full Name</span>
+                <span class="detail-value" id="officerName">Loading...</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Badge Number</span>
+                <span class="detail-value" id="officerBadge">Loading...</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Department</span>
+                <span class="detail-value" id="officerDepartment">Loading...</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Rank</span>
+                <span class="detail-value" id="officerRank">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-container" id="statsContainer">
+        <div class="stat-card">
+            <div class="stat-icon stat-total">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-number stat-total" id="totalAssignments">0</div>
+            <div class="stat-label">Total Assignments</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-assigned">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-number stat-assigned" id="assignedCount">0</div>
+            <div class="stat-label">Assigned</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-progress">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stat-number stat-progress" id="inProgressCount">0</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-completed">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number stat-completed" id="completedCount">0</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-overdue">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-number stat-overdue" id="overdueCount">0</div>
+            <div class="stat-label">Overdue</div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Container -->
+    <div class="search-container">
+        <div class="search-box-container">
+            <input type="text" class="search-box" id="searchInput" placeholder="Search assignments by case ID, location, or notes...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="filter-container">
+            <label class="filter-label">
+                <i class="fas fa-filter"></i>
+                Status:
+            </label>
+            <select class="status-filter" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="REASSIGNED">Reassigned</option>
+            </select>
+        </div>
+        <div class="filter-container">
+            <label class="filter-label">
+                <i class="fas fa-flag"></i>
+                Priority:
+            </label>
+            <select class="status-filter" id="priorityFilter">
+                <option value="">All Priorities</option>
+                <option value="URGENT">Urgent</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Assignments Table Container -->
+    <div class="table-container" id="tableContainer">
+        <table class="data-table" id="assignmentsTable">
+            <thead>
+            <tr>
+                <th>Assignment ID</th>
+                <th>Case Details</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due Date</th>
+                <th>Assigned Date</th>
+                <th>Notes</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="assignmentsTableBody">
+            <!-- Assignments will be loaded here -->
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-tasks"></i>
+            <h3>No Assignments Found</h3>
+            <p>You don't have any assignments at the moment.</p>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner-sm"></div>
+            <p>Loading assignments...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div id="statusModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Update Assignment Status</h2>
+            <button class="close" id="closeStatusModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="statusForm">
+                <input type="hidden" id="updateAssignmentId" value="">
+
+                <div class="form-group">
+                    <label for="newStatus" class="form-label">New Status *</label>
+                    <select class="form-control" id="newStatus" name="newStatus" required>
+                        <option value="">Select Status</option>
+                        <option value="ASSIGNED">Assigned</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="statusNotes" class="form-label">Update Notes</label>
+                    <textarea class="form-control" id="statusNotes" name="statusNotes" rows="3"
+                              placeholder="Add any notes about this status update..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelStatusBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveStatusBtn" form="statusForm">
+                <i class="fas fa-save"></i>
+                Update Status
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Global variables
+        let loggedInUser = null;
+        let assignments = [];
+
+        // Initialize the page
+        init();
+
+        function init() {
+            loadLoggedInUser().then(() => {
+                loadAssignments();
+                updateOfficerInfo();
+            }).catch(() => {
+                showAlert('Unable to load user information. Please refresh the page.', 'error');
+            });
+            bindEvents();
+        }
+
+        function bindEvents() {
+            // Refresh button
+            $('#refreshBtn').click(function() {
+                loadAssignments();
+            });
+
+            // Search functionality
+            $('#searchInput').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                filterAssignments();
+            });
+
+            // Status filter
+            $('#statusFilter, #priorityFilter').on('change', function() {
+                filterAssignments();
+            });
+
+            // Modal events
+            $('#closeStatusModal, #cancelStatusBtn').click(function() {
+                closeStatusModal();
+            });
+
+            // Status form submission
+            $('#statusForm').submit(function(e) {
+                e.preventDefault();
+                updateAssignmentStatus();
+            });
+
+            // Close modal when clicking outside
+            $('.modal').click(function(e) {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            });
+        }
+
+        function loadLoggedInUser() {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/api/users/me',
+                    method: 'GET',
+                    success: function(user) {
+                        loggedInUser = user;
+                        console.log('Logged in user loaded:', user);
+                        resolve(user);
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading logged-in user:', xhr);
+                        reject(xhr);
+                    }
+                });
+            });
+        }
+
+        function updateOfficerInfo() {
+            if (!loggedInUser) return;
+
+            $('#officerName').text(loggedInUser.fullName || 'N/A');
+            $('#officerBadge').text(loggedInUser.badgeNumber || 'N/A');
+            $('#officerDepartment').text(loggedInUser.department || 'N/A');
+            $('#officerRank').text(loggedInUser.policeRank || 'N/A');
+            $('#officerInfoCard').show();
+        }
+
+        function loadAssignments() {
+            if (!loggedInUser) return;
+
+            showLoading(true);
+
+            $.ajax({
+                url: `/api/assignments/officer/${loggedInUser.id}`,
+                method: 'GET',
+                success: function(data) {
+                    assignments = data || [];
+                    renderAssignments(assignments);
+                    updateStatistics(assignments);
+                    showLoading(false);
+                },
+                error: function(xhr) {
+                    showLoading(false);
+                    if (xhr.status === 204 || xhr.status === 404) {
+                        assignments = [];
+                        renderAssignments([]);
+                        updateStatistics([]);
+                        return;
+                    }
+                    console.error('Error loading assignments:', xhr);
+                    showAlert('Error loading assignments: ' + (xhr.responseText || 'Server unavailable'), 'error');
+                    renderAssignments([]);
+                }
+            });
+        }
+
+        function renderAssignments(assignmentList) {
+            const tbody = $('#assignmentsTableBody');
+            tbody.empty();
+
+            if (assignmentList.length === 0) {
+                $('#emptyState').show();
+                $('#assignmentsTable').hide();
+                return;
+            }
+
+            $('#emptyState').hide();
+            $('#assignmentsTable').show();
+
+            assignmentList.forEach(assignment => {
+                const row = createAssignmentRow(assignment);
+                tbody.append(row);
+            });
+        }
+
+        function createAssignmentRow(assignment) {
+            const statusClass = getStatusClass(assignment.assignmentStatus);
+            const priorityClass = getPriorityClass(assignment.priority);
+            const assignedDate = formatDate(assignment.assignmentDate);
+            const dueDate = assignment.dueDate ? formatDate(assignment.dueDate) : 'No due date';
+            const isOverdue = assignment.dueDate && new Date(assignment.dueDate) < new Date() && assignment.assignmentStatus !== 'COMPLETED';
+            const rowClass = isOverdue ? 'overdue-highlight' : '';
+
+            return `
+                <tr data-assignment-id="${assignment.id}" class="${rowClass}">
+                    <td>
+                        <span class="assignment-id">#${assignment.id}</span>
+                    </td>
+                    <td>
+                        <strong>Case #${assignment.caseId}</strong>
+                        <br><small style="color: #6c757d;">${assignment.caseType || 'N/A'}</small>
+                        <br><small style="color: #6c757d;">${assignment.caseLocation || 'N/A'}</small>
+                    </td>
+                    <td>
+                        <span class="priority-badge priority-${assignment.priority ? assignment.priority.toLowerCase() : 'medium'}">${assignment.priority || 'MEDIUM'}</span>
+                        ${isOverdue ? '<br><small style="color: #e74c3c; font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> OVERDUE</small>' : ''}
+                    </td>
+                    <td>
+                        <span class="assignment-status ${statusClass}">${assignment.assignmentStatus || 'ASSIGNED'}</span>
+                    </td>
+                    <td>
+                        ${dueDate}
+                        ${isOverdue ? '<br><small style="color: #e74c3c;">Past due</small>' : ''}
+                    </td>
+                    <td>${assignedDate}</td>
+                    <td>
+                        <small>${assignment.assignmentNotes || 'No notes'}</small>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn action-btn-edit" onclick="updateStatus(${assignment.id})"
+                                    ${assignment.assignmentStatus === 'COMPLETED' ? 'disabled' : ''}>
+                                <i class="fas fa-edit"></i>
+                                Update Status
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function getStatusClass(status) {
+            const statusMap = {
+                'ASSIGNED': 'status-assigned',
+                'IN_PROGRESS': 'status-in_progress',
+                'COMPLETED': 'status-completed',
+                'REASSIGNED': 'status-reassigned'
+            };
+            return statusMap[status] || 'status-assigned';
+        }
+
+        function getPriorityClass(priority) {
+            const priorityMap = {
+                'URGENT': 'priority-urgent',
+                'HIGH': 'priority-high',
+                'MEDIUM': 'priority-medium',
+                'LOW': 'priority-low'
+            };
+            return priorityMap[priority] || 'priority-medium';
+        }
+
+        function updateStatistics(assignmentList) {
+            const stats = {
+                total: assignmentList.length,
+                assigned: 0,
+                inProgress: 0,
+                completed: 0,
+                overdue: 0
+            };
+
+            const now = new Date();
+            assignmentList.forEach(assignment => {
+                switch(assignment.assignmentStatus) {
+                    case 'ASSIGNED':
+                        stats.assigned++;
+                        break;
+                    case 'IN_PROGRESS':
+                        stats.inProgress++;
+                        break;
+                    case 'COMPLETED':
+                        stats.completed++;
+                        break;
+                }
+
+                // Check for overdue
+                if (assignment.dueDate && new Date(assignment.dueDate) < now && assignment.assignmentStatus !== 'COMPLETED') {
+                    stats.overdue++;
+                }
+            });
+
+            $('#totalAssignments').text(stats.total);
+            $('#assignedCount').text(stats.assigned);
+            $('#inProgressCount').text(stats.inProgress);
+            $('#completedCount').text(stats.completed);
+            $('#overdueCount').text(stats.overdue);
+        }
+
+        function filterAssignments() {
+            const searchTerm = $('#searchInput').val().toLowerCase();
+            const statusFilter = $('#statusFilter').val();
+            const priorityFilter = $('#priorityFilter').val();
+
+            let filteredAssignments = assignments;
+
+            // Apply search filter
+            if (searchTerm) {
+                filteredAssignments = filteredAssignments.filter(assignment => {
+                    const searchableText = [
+                        assignment.id?.toString() || '',
+                        assignment.caseId?.toString() || '',
+                        assignment.caseLocation || '',
+                        assignment.assignmentNotes || '',
+                        assignment.caseType || ''
+                    ].join(' ').toLowerCase();
+
+                    return searchableText.includes(searchTerm);
+                });
+            }
+
+            // Apply status filter
+            if (statusFilter) {
+                filteredAssignments = filteredAssignments.filter(assignment =>
+                    assignment.assignmentStatus === statusFilter
+                );
+            }
+
+            // Apply priority filter
+            if (priorityFilter) {
+                filteredAssignments = filteredAssignments.filter(assignment =>
+                    assignment.priority === priorityFilter
+                );
+            }
+
+            renderAssignments(filteredAssignments);
+        }
+
+        function updateStatus(assignmentId) {
+            $('#updateAssignmentId').val(assignmentId);
+            $('#newStatus').val('');
+            $('#statusNotes').val('');
+            $('#statusModal').show();
+        }
+
+        function closeStatusModal() {
+            $('#statusModal').hide();
+            $('#statusForm')[0].reset();
+        }
+
+        function updateAssignmentStatus() {
+            const assignmentId = $('#updateAssignmentId').val();
+            const newStatus = $('#newStatus').val();
+            const notes = $('#statusNotes').val();
+
+            if (!newStatus) {
+                showAlert('Please select a status!', 'error');
+                return;
+            }
+
+            const updateData = {
+                status: newStatus
+            };
+
+            $.ajax({
+                url: `/api/assignments/${assignmentId}/status`,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(updateData),
+                success: function(response) {
+                    // Update notes if provided
+                    if (notes.trim()) {
+                        updateAssignmentNotes(assignmentId, notes);
+                    } else {
+                        loadAssignments();
+                        closeStatusModal();
+                        showAlert('Assignment status updated successfully!', 'success');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error updating assignment status:', xhr);
+                    showAlert('Error updating assignment status. Please try again.', 'error');
+                }
+            });
+        }
+
+        function updateAssignmentNotes(assignmentId, notes) {
+            $.ajax({
+                url: `/api/assignments/${assignmentId}/notes`,
+                method: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify(notes),
+                success: function(response) {
+                    loadAssignments();
+                    closeStatusModal();
+                    showAlert('Assignment status and notes updated successfully!', 'success');
+                },
+                error: function(xhr) {
+                    console.error('Error updating assignment notes:', xhr);
+                    loadAssignments();
+                    closeStatusModal();
+                    showAlert('Assignment status updated, but failed to update notes.', 'warning');
+                }
+            });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function showLoading(show) {
+            if (show) {
+                $('#loadingOverlay').show();
+            } else {
+                $('#loadingOverlay').hide();
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = $(`
+                <div class="alert ${type}" style="position: fixed; top: 20px; right: 20px; z-index: 3000;
+                     padding: 1rem 1.5rem; border-radius: 12px; color: white; font-weight: 500;
+                     max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                     background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' :
+                type === 'warning' ? 'linear-gradient(135deg, #f39c12, #e67e22)' :
+                    'linear-gradient(135deg, #e74c3c, #c0392b)'};
+                     animation: slideInRight 0.3s ease;">
+                    ${message}
+                </div>
+            `);
+
+            $('body').append(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Global functions for button onclick events
+        window.updateStatus = updateStatus;
+    });
+</script>
+</body>
+</html>

@@ -261,18 +261,6 @@ public class CaseController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-    // Get cases by reporter ID
-    @GetMapping("/reporter/{reporterIdNumber}")
-    public ResponseEntity<List<Case>> getCasesByReporter(@PathVariable("reporterIdNumber") String reporterIdNumber) {
-        try {
-            List<Case> cases = caseService.getCasesByReporter(reporterIdNumber);
-            return new ResponseEntity<>(cases, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     // Get cases by type
     @GetMapping("/type/{caseType}")
     public ResponseEntity<List<Case>> getCasesByType(@PathVariable("caseType") String caseType) {
