@@ -1,6 +1,7 @@
 package com.kca_2sem_project.digitalob.casesmanagement;
 
 import com.kca_2sem_project.digitalob.auditlogs.LogService;
+import com.kca_2sem_project.digitalob.config.SmsService;
 import com.kca_2sem_project.digitalob.usersmanagement.User;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +23,12 @@ public class CaseController {
     private LogService logService;
 
     @Autowired
+    private SmsService smsService; // Add SMS service
+
+    @Autowired
     private HttpSession session;
 
-    // Create a new case
+    // Create a new case with SMS notification
     @PostMapping
     public ResponseEntity<Case> createCase(@RequestBody Case caseEntity) {
         try {
@@ -34,17 +38,34 @@ public class CaseController {
 
             Case savedCase = caseService.createCase(caseEntity);
 
-            // Log the case creation
+            // Send SMS notification to the reporter
+            boolean smsStatus = false;
+            if (savedCase.getReporterPhone() != null && !savedCase.getReporterPhone().trim().isEmpty()) {
+                smsStatus = smsService.sendCaseRegistrationSms(savedCase);
+            }
+
+            // Log the case creation with SMS status
             logService.logAction(
                     username,
                     "CASE_CREATED",
-                    String.format("Case #%d created by %s. Type: %s, Location: %s, Reporter: %s",
+                    String.format("Case #%d created by %s. Type: %s, Location: %s, Reporter: %s, SMS Status: %s",
                             savedCase.getId(),
                             username,
                             savedCase.getCaseType(),
                             savedCase.getCrimeLocation(),
-                            savedCase.getReporterName())
+                            savedCase.getReporterName(),
+                            smsStatus ? "SENT" : "FAILED")
             );
+
+            // Also log SMS status separately if it failed
+            if (!smsStatus && savedCase.getReporterPhone() != null) {
+                logService.logAction(
+                        username,
+                        "SMS_FAILED",
+                        String.format("Failed to send SMS notification for case #%d to %s",
+                                savedCase.getId(), savedCase.getReporterPhone())
+                );
+            }
 
             return new ResponseEntity<>(savedCase, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -115,6 +136,7 @@ public class CaseController {
                 StringBuilder logMessage = new StringBuilder();
                 logMessage.append(String.format("Case #%d updated by %s.", id, username));
 
+                boolean statusChanged = false;
                 if (existingCaseOpt.isPresent()) {
                     Case existingCase = existingCaseOpt.get();
 
@@ -122,6 +144,7 @@ public class CaseController {
                     if (!existingCase.getCaseStatus().equals(updatedCase.getCaseStatus())) {
                         logMessage.append(String.format(" Status changed from %s to %s.",
                                 existingCase.getCaseStatus(), updatedCase.getCaseStatus()));
+                        statusChanged = true;
                     }
 
                     if (!existingCase.getCaseType().equals(updatedCase.getCaseType())) {
@@ -132,6 +155,26 @@ public class CaseController {
                     if (!existingCase.getCrimeLocation().equals(updatedCase.getCrimeLocation())) {
                         logMessage.append(String.format(" Location changed from %s to %s.",
                                 existingCase.getCrimeLocation(), updatedCase.getCrimeLocation()));
+                    }
+                }
+
+                // Send SMS notification if case status changed to CLOSED
+                if (statusChanged && "CLOSED".equals(updatedCase.getCaseStatus())) {
+                    if (updatedCase.getReporterPhone() != null && !updatedCase.getReporterPhone().trim().isEmpty()) {
+                        String closureMessage = String.format(
+                                "Dear %s, your case OB Number %d has been closed at Ruaraka Police Station. " +
+                                        "Thank you for your cooperation.",
+                                updatedCase.getReporterName(),
+                                updatedCase.getId()
+                        );
+
+                        boolean smsStatus = smsService.sendCustomSms(updatedCase.getReporterPhone(), closureMessage);
+
+                        if (smsStatus) {
+                            logMessage.append(" SMS notification sent to reporter.");
+                        } else {
+                            logMessage.append(" SMS notification failed.");
+                        }
                     }
                 }
 
@@ -261,6 +304,7 @@ public class CaseController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     // Get cases by type
     @GetMapping("/type/{caseType}")
     public ResponseEntity<List<Case>> getCasesByType(@PathVariable("caseType") String caseType) {
@@ -283,7 +327,7 @@ public class CaseController {
         }
     }
 
-    // Update case status only
+    // Update case status only (with SMS notification)
     @PatchMapping("/{id}/status")
     public ResponseEntity<Case> updateCaseStatus(@PathVariable("id") Long id, @RequestParam String status) {
         try {
@@ -297,12 +341,26 @@ public class CaseController {
 
             Case updatedCase = caseService.updateCaseStatus(id, status);
             if (updatedCase != null) {
+                // Send SMS notification for status updates
+                boolean smsStatus = false;
+                if (updatedCase.getReporterPhone() != null && !updatedCase.getReporterPhone().trim().isEmpty()) {
+                    String statusMessage = String.format(
+                            "Dear %s, your case OB Number %d status has been updated to %s at Ruaraka Police Station. " +
+                                    "Thank you.",
+                            updatedCase.getReporterName(),
+                            updatedCase.getId(),
+                            status
+                    );
+
+                    smsStatus = smsService.sendCustomSms(updatedCase.getReporterPhone(), statusMessage);
+                }
+
                 // Log the status change
                 logService.logAction(
                         username,
                         "CASE_STATUS_UPDATED",
-                        String.format("Case #%d status updated by %s from '%s' to '%s'",
-                                id, username, oldStatus, status)
+                        String.format("Case #%d status updated by %s from '%s' to '%s'. SMS Status: %s",
+                                id, username, oldStatus, status, smsStatus ? "SENT" : "FAILED")
                 );
 
                 return new ResponseEntity<>(updatedCase, HttpStatus.OK);
@@ -323,7 +381,6 @@ public class CaseController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    // Add this method to your existing CaseController class
 
     @GetMapping("/mapping")
     public ResponseEntity<List<CaseLocationMapping>> getCasesMapping() {
