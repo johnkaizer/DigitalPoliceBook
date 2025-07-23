@@ -26,21 +26,19 @@ public class Assignment implements Serializable {
     private Long id;
 
     // Case Information
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "case_id", nullable = false)
-    @JsonIgnore // Don't serialize the full entity
+    @JsonIgnore
     private Case assignedCase;
 
-    // Officer Information
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "officer_id", nullable = false)
-    @JsonIgnore // Don't serialize the full entity
+    @JsonIgnore
     private User assignedOfficer;
 
-    // Admin who made the assignment
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "assigned_by_id", nullable = false)
-    @JsonIgnore // Don't serialize the full entity
+    @JsonIgnore
     private User assignedBy;
 
     // Assignment Details

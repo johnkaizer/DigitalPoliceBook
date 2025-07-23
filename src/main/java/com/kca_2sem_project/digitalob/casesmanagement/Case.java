@@ -1,9 +1,13 @@
 package com.kca_2sem_project.digitalob.casesmanagement;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kca_2sem_project.digitalob.assignment.Assignment;
 import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -38,6 +42,10 @@ public class Case implements Serializable {
     // Timestamps
     private LocalDateTime created;
     private LocalDateTime updated;
+
+    @OneToMany(mappedBy = "assignedCase", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Assignment> assignments = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

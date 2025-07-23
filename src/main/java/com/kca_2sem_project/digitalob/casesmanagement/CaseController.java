@@ -1,14 +1,19 @@
 package com.kca_2sem_project.digitalob.casesmanagement;
 
+import com.kca_2sem_project.digitalob.assignment.AssignmentService;
 import com.kca_2sem_project.digitalob.auditlogs.LogService;
-import com.kca_2sem_project.digitalob.config.SmsService;
+import com.kca_2sem_project.digitalob.config.SMSService;
 import com.kca_2sem_project.digitalob.usersmanagement.User;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -20,10 +25,13 @@ public class CaseController {
     private CaseService caseService;
 
     @Autowired
+    private AssignmentService assignmentService;
+
+    @Autowired
     private LogService logService;
 
     @Autowired
-    private SmsService smsService; // Add SMS service
+    private SMSService smsService; // Add SMS service
 
     @Autowired
     private HttpSession session;
@@ -38,34 +46,24 @@ public class CaseController {
 
             Case savedCase = caseService.createCase(caseEntity);
 
-            // Send SMS notification to the reporter
+            // Send SMS notification to reporter if phone number is provided
             boolean smsStatus = false;
             if (savedCase.getReporterPhone() != null && !savedCase.getReporterPhone().trim().isEmpty()) {
-                smsStatus = smsService.sendCaseRegistrationSms(savedCase);
+                smsStatus = smsService.sendCaseCreationSMS(
+                        savedCase.getReporterPhone(),
+                        savedCase.getReporterName(),
+                        savedCase.getId()
+                );
             }
 
-            // Log the case creation with SMS status
+            // Log case creation with SMS status
             logService.logAction(
                     username,
                     "CASE_CREATED",
-                    String.format("Case #%d created by %s. Type: %s, Location: %s, Reporter: %s, SMS Status: %s",
-                            savedCase.getId(),
-                            username,
-                            savedCase.getCaseType(),
-                            savedCase.getCrimeLocation(),
-                            savedCase.getReporterName(),
+                    String.format("Case #%d created by %s. Reporter: %s. SMS Status: %s",
+                            savedCase.getId(), username, savedCase.getReporterName(),
                             smsStatus ? "SENT" : "FAILED")
             );
-
-            // Also log SMS status separately if it failed
-            if (!smsStatus && savedCase.getReporterPhone() != null) {
-                logService.logAction(
-                        username,
-                        "SMS_FAILED",
-                        String.format("Failed to send SMS notification for case #%d to %s",
-                                savedCase.getId(), savedCase.getReporterPhone())
-                );
-            }
 
             return new ResponseEntity<>(savedCase, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -159,22 +157,17 @@ public class CaseController {
                 }
 
                 // Send SMS notification if case status changed to CLOSED
+                boolean smsStatus = false;
                 if (statusChanged && "CLOSED".equals(updatedCase.getCaseStatus())) {
                     if (updatedCase.getReporterPhone() != null && !updatedCase.getReporterPhone().trim().isEmpty()) {
                         String closureMessage = String.format(
-                                "Dear %s, your case OB Number %d has been closed at Ruaraka Police Station. " +
+                                "Dear %s, your case OB Number %d has been closed at Ruaraka Police Station(demo university project). " +
                                         "Thank you for your cooperation.",
                                 updatedCase.getReporterName(),
                                 updatedCase.getId()
                         );
-
-                        boolean smsStatus = smsService.sendCustomSms(updatedCase.getReporterPhone(), closureMessage);
-
-                        if (smsStatus) {
-                            logMessage.append(" SMS notification sent to reporter.");
-                        } else {
-                            logMessage.append(" SMS notification failed.");
-                        }
+                        smsStatus = smsService.sendCustomSms(updatedCase.getReporterPhone(), closureMessage);
+                        logMessage.append(String.format(" SMS Status: %s", smsStatus ? "SENT" : "FAILED"));
                     }
                 }
 
@@ -206,56 +199,53 @@ public class CaseController {
 
     // Delete case
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteCase(@PathVariable("id") Long id) {
+    public ResponseEntity<Map<String, String>> deleteCase(@PathVariable("id") Long id) {
         try {
-            // Get the logged-in user from session
             User loggedInUser = (User) session.getAttribute("loggedInUser");
             String username = loggedInUser != null ? loggedInUser.getFullName() : "Unknown User";
 
-            // Get case details before deletion for logging
+            // Check if case has assignments
             Optional<Case> caseToDelete = caseService.getCaseById(id);
+            if (!caseToDelete.isPresent()) {
+                return new ResponseEntity<>(Map.of("error", "Case not found"), HttpStatus.NOT_FOUND);
+            }
+
+            // Count assignments for this case
+            long assignmentCount = assignmentService.getAssignmentsByCaseId(id).size();
 
             boolean deleted = caseService.deleteCase(id);
             if (deleted) {
-                // Log the case deletion with details
                 String logMessage = String.format("Case #%d deleted by %s", id, username);
-                if (caseToDelete.isPresent()) {
-                    Case deletedCase = caseToDelete.get();
-                    logMessage += String.format(". Deleted case details - Type: %s, Location: %s, Reporter: %s",
-                            deletedCase.getCaseType(),
-                            deletedCase.getCrimeLocation(),
-                            deletedCase.getReporterName());
+                if (assignmentCount > 0) {
+                    logMessage += String.format(" (Warning: %d related assignments were also deleted)", assignmentCount);
                 }
 
-                logService.logAction(
-                        username,
-                        "CASE_DELETED",
-                        logMessage
-                );
+                Case deletedCase = caseToDelete.get();
+                logMessage += String.format(". Deleted case details - Type: %s, Location: %s, Reporter: %s",
+                        deletedCase.getCaseType(),
+                        deletedCase.getCrimeLocation(),
+                        deletedCase.getReporterName());
 
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                logService.logAction(username, "CASE_DELETED", logMessage);
+
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Case deleted successfully");
+                if (assignmentCount > 0) {
+                    response.put("warning", assignmentCount + " related assignments were also deleted");
+                }
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                // Log failed deletion attempt
-                logService.logAction(
-                        username,
-                        "CASE_DELETE_FAILED",
-                        String.format("Failed to delete case #%d by %s - Case not found", id, username)
-                );
-
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                logService.logAction(username, "CASE_DELETE_FAILED",
+                        String.format("Failed to delete case #%d by %s - Case not found", id, username));
+                return new ResponseEntity<>(Map.of("error", "Failed to delete case"), HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            // Log the error
             User loggedInUser = (User) session.getAttribute("loggedInUser");
             String username = loggedInUser != null ? loggedInUser.getFullName() : "Unknown User";
 
-            logService.logAction(
-                    username,
-                    "CASE_DELETE_ERROR",
-                    String.format("Error deleting case #%d by %s: %s", id, username, e.getMessage())
-            );
-
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            logService.logAction(username, "CASE_DELETE_ERROR",
+                    String.format("Error deleting case #%d by %s: %s", id, username, e.getMessage()));
+            return new ResponseEntity<>(Map.of("error", "Internal server error"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

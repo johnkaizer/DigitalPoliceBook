@@ -1,5 +1,7 @@
 package com.kca_2sem_project.digitalob.usersmanagement;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kca_2sem_project.digitalob.assignment.Assignment;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -36,6 +40,13 @@ public class User implements Serializable {
 
     private LocalDateTime created;
     private LocalDateTime updated;
+    @OneToMany(mappedBy = "assignedOfficer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Assignment> officerAssignments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "assignedBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Assignment> createdAssignments = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

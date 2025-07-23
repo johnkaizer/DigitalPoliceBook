@@ -1,5 +1,6 @@
 package com.kca_2sem_project.digitalob.usersmanagement;
 
+import com.kca_2sem_project.digitalob.assignment.AssignmentService;
 import com.kca_2sem_project.digitalob.auditlogs.LogService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ import java.util.Map;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AssignmentService assignmentService;
     @Autowired
     private HttpSession session;
 
@@ -52,9 +56,47 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOfficer(@PathVariable Long id) {
-        userService.deleteOfficer(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Map<String, String>> deleteOfficer(@PathVariable Long id) {
+        try {
+            User loggedInUser = (User) session.getAttribute("loggedInUser");
+            String username = loggedInUser != null ? loggedInUser.getFullName() : "Unknown User";
+
+            // Get officer details before deletion
+            User officerToDelete = userService.getOfficer(id);
+            if (officerToDelete == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Officer not found"));
+            }
+
+            // Count assignments for this officer
+            long assignmentCount = assignmentService.getAssignmentsByOfficerId(id).size();
+
+            userService.deleteOfficer(id);
+
+            String logMessage = String.format("Officer %s (ID: %d, Badge: %s) deleted by %s",
+                    officerToDelete.getFullName(), id, officerToDelete.getBadgeNumber(), username);
+            if (assignmentCount > 0) {
+                logMessage += String.format(" (Warning: %d related assignments were also deleted)", assignmentCount);
+            }
+
+            logService.logAction(username, "OFFICER_DELETED", logMessage);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Officer deleted successfully");
+            if (assignmentCount > 0) {
+                response.put("warning", assignmentCount + " related assignments were also deleted");
+            }
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            User loggedInUser = (User) session.getAttribute("loggedInUser");
+            String username = loggedInUser != null ? loggedInUser.getFullName() : "Unknown User";
+
+            logService.logAction(username, "OFFICER_DELETE_ERROR",
+                    String.format("Error deleting officer ID %d by %s: %s", id, username, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to delete officer: " + e.getMessage()));
+        }
     }
     @GetMapping("/{id}")
     public ResponseEntity<User> getOfficer(@PathVariable Long id) {
